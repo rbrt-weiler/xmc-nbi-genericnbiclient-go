@@ -36,14 +36,14 @@ import (
 
 const (
 	toolName         string = "BELL Generic XMC NBI Client"
-	toolVersion      string = "0.1.0"
+	toolVersion      string = "0.1.1"
 	httpUserAgent    string = toolName + "/" + toolVersion
-	errSuccess       uint   = 0  // No error
-	errUsage         uint   = 1  // Usage error
-	errMissArg       uint   = 2  // Missing arguments
-	errHTTPRequest   uint   = 10 // Error creating the HTTPS request
-	errXMCConnect    uint   = 11 // Error connecting to XMC
-	errHTTPSResponse uint   = 12 // Error parsing the HTTPS response
+	errSuccess       int    = 0  // No error
+	errUsage         int    = 1  // Usage error
+	errMissArg       int    = 2  // Missing arguments
+	errHTTPRequest   int    = 10 // Error creating the HTTPS request
+	errXMCConnect    int    = 11 // Error connecting to XMC
+	errHTTPSResponse int    = 12 // Error parsing the HTTPS response
 )
 
 func main() {
