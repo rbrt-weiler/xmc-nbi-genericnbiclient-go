@@ -36,7 +36,7 @@ import (
 
 const (
 	toolName         string = "BELL Generic XMC NBI Client"
-	toolVersion      string = "0.1.0"
+	toolVersion      string = "0.1.1"
 	httpUserAgent    string = toolName + "/" + toolVersion
 	errSuccess       int    = 0  // No error
 	errUsage         int    = 1  // Usage error
