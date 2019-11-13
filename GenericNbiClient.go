@@ -35,8 +35,8 @@ import (
 )
 
 const (
-	toolName         string = "BELL Generic XMC NBI Client"
-	toolVersion      string = "0.1.1"
+	toolName         string = "BELL XMC NBI GenericNbiClient.go"
+	toolVersion      string = "0.2.0"
 	httpUserAgent    string = toolName + "/" + toolVersion
 	errSuccess       int    = 0  // No error
 	errUsage         int    = 1  // Usage error
@@ -54,6 +54,7 @@ func main() {
 	var httpUsername string
 	var httpPassword string
 	var xmcQuery string
+	var printVersion bool
 
 	flag.StringVar(&xmcHost, "host", "", "XMC Hostname / IP")
 	flag.UintVar(&httpPort, "port", 8443, "HTTP port where XMC is listening")
@@ -62,6 +63,7 @@ func main() {
 	flag.StringVar(&httpUsername, "username", "admin", "Username for HTTP auth")
 	flag.StringVar(&httpPassword, "password", "", "Password for HTTP auth")
 	flag.StringVar(&xmcQuery, "query", "query { network { devices { up ip sysName } } }", "GraphQL query to send to XMC")
+	flag.BoolVar(&printVersion, "version", false, "Print version information and exit")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "This tool queries the XMC API and prints the raw reply (JSON) to stdout.\n")
 		fmt.Fprintf(os.Stderr, "\n")
@@ -72,6 +74,11 @@ func main() {
 		os.Exit(errUsage)
 	}
 	flag.Parse()
+
+	if printVersion {
+		fmt.Println(httpUserAgent)
+		os.Exit(errSuccess)
+	}
 
 	if xmcHost == "" {
 		fmt.Fprintln(os.Stderr, "Variable -host must be defined. Use -h to get help.")

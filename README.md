@@ -36,6 +36,8 @@ Tested with go1.11 and go1.13.
         GraphQL query to send to XMC (default "query { network { devices { up ip sysName } } }")
   -username string
         Username for HTTP auth (default "admin")
+  -version
+        Print version information and exit
 </pre>
 
 ## Source
