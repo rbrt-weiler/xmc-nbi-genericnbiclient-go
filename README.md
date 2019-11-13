@@ -23,17 +23,19 @@ Tested with go1.11 and go1.13.
 
 <pre>
   -host string
-    	XMC Hostname / IP
+        XMC Hostname / IP
   -httptimeout uint
-    	Timeout for HTTP(S) connections (default 5)
+        Timeout for HTTP(S) connections (default 5)
   -insecurehttps
-    	Do not validate HTTPS certificates
+        Do not validate HTTPS certificates
   -password string
-    	Password for HTTP auth
+        Password for HTTP auth
+  -port uint
+        HTTP port where XMC is listening (default 8443)
   -query string
-    	GraphQL query to send to XMC (default "query { network { devices { up ip sysName } } }")
+        GraphQL query to send to XMC (default "query { network { devices { up ip sysName } } }")
   -username string
-    	Username for HTTP auth (default "admin")
+        Username for HTTP auth (default "admin")
 </pre>
 
 ## Source
