@@ -48,6 +48,7 @@ const (
 
 func main() {
 	var xmcHost string
+	var httpPort uint
 	var httpTimeout uint
 	var insecureHTTPS bool
 	var httpUsername string
@@ -55,6 +56,7 @@ func main() {
 	var xmcQuery string
 
 	flag.StringVar(&xmcHost, "host", "", "XMC Hostname / IP")
+	flag.UintVar(&httpPort, "port", 8443, "HTTP port where XMC is listening")
 	flag.UintVar(&httpTimeout, "httptimeout", 5, "Timeout for HTTP(S) connections")
 	flag.BoolVar(&insecureHTTPS, "insecurehttps", false, "Do not validate HTTPS certificates")
 	flag.StringVar(&httpUsername, "username", "admin", "Username for HTTP auth")
@@ -76,7 +78,7 @@ func main() {
 		os.Exit(errMissArg)
 	}
 
-	var apiURL string = "https://" + xmcHost + ":8443/nbi/graphql"
+	var apiURL string = "https://" + xmcHost + ":" + fmt.Sprint(httpPort) + "/nbi/graphql"
 	httpTransport := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecureHTTPS},
 	}
