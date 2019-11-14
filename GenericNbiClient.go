@@ -36,7 +36,7 @@ import (
 
 const (
 	toolName         string = "BELL XMC NBI GenericNbiClient.go"
-	toolVersion      string = "0.2.0"
+	toolVersion      string = "0.3.0"
 	httpUserAgent    string = toolName + "/" + toolVersion
 	errSuccess       int    = 0  // No error
 	errUsage         int    = 1  // Usage error
@@ -62,7 +62,7 @@ func main() {
 	flag.BoolVar(&insecureHTTPS, "insecurehttps", false, "Do not validate HTTPS certificates")
 	flag.StringVar(&httpUsername, "username", "admin", "Username for HTTP auth")
 	flag.StringVar(&httpPassword, "password", "", "Password for HTTP auth")
-	flag.StringVar(&xmcQuery, "query", "query { network { devices { up ip sysName } } }", "GraphQL query to send to XMC")
+	flag.StringVar(&xmcQuery, "query", "query { network { devices { up ip sysName nickName } } }", "GraphQL query to send to XMC")
 	flag.BoolVar(&printVersion, "version", false, "Print version information and exit")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "This tool queries the XMC API and prints the raw reply (JSON) to stdout.\n")
