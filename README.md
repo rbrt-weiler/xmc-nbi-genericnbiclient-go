@@ -33,7 +33,7 @@ Tested with go1.11 and go1.13.
   -port uint
         HTTP port where XMC is listening (default 8443)
   -query string
-        GraphQL query to send to XMC (default "query { network { devices { up ip sysName } } }")
+        GraphQL query to send to XMC (default "query { network { devices { up ip sysName nickName } } }")
   -username string
         Username for HTTP auth (default "admin")
   -version
