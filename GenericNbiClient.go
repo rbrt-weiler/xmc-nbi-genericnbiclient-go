@@ -31,19 +31,21 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 	"time"
 )
 
 const (
-	toolName         string = "BELL XMC NBI GenericNbiClient.go"
-	toolVersion      string = "0.3.0"
-	httpUserAgent    string = toolName + "/" + toolVersion
-	errSuccess       int    = 0  // No error
-	errUsage         int    = 1  // Usage error
-	errMissArg       int    = 2  // Missing arguments
-	errHTTPRequest   int    = 10 // Error creating the HTTPS request
-	errXMCConnect    int    = 11 // Error connecting to XMC
-	errHTTPSResponse int    = 12 // Error parsing the HTTPS response
+	toolName        string = "BELL XMC NBI GenericNbiClient.go"
+	toolVersion     string = "0.3.1"
+	httpUserAgent   string = toolName + "/" + toolVersion
+	jsonMimeType    string = "application/json"
+	errSuccess      int    = 0  // No error
+	errUsage        int    = 1  // Usage error
+	errMissArg      int    = 2  // Missing arguments
+	errHTTPRequest  int    = 10 // Error creating the HTTPS request
+	errXMCConnect   int    = 11 // Error connecting to XMC
+	errHTTPResponse int    = 12 // Error parsing the HTTPS response
 )
 
 func main() {
@@ -101,6 +103,7 @@ func main() {
 	}
 
 	req.Header.Set("User-Agent", httpUserAgent)
+	req.Header.Set("Accept", jsonMimeType)
 	req.SetBasicAuth(httpUsername, httpPassword)
 
 	httpQuery := req.URL.Query()
@@ -117,10 +120,15 @@ func main() {
 		os.Exit(errXMCConnect)
 	}
 
+	resContentType := res.Header.Get("Content-Type")
+	if strings.Index(resContentType, jsonMimeType) != 0 {
+		fmt.Fprintf(os.Stderr, "Error: Content-Type %s returned instead of %s\n", resContentType, jsonMimeType)
+		os.Exit(errHTTPResponse)
+	}
 	body, readErr := ioutil.ReadAll(res.Body)
 	if readErr != nil {
 		fmt.Fprintf(os.Stderr, "Error: Could not read server response: %s\n", readErr)
-		os.Exit(errHTTPSResponse)
+		os.Exit(errHTTPResponse)
 	}
 	fmt.Println(string(body))
 
