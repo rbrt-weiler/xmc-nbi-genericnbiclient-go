@@ -50,20 +50,20 @@ const (
 
 func main() {
 	var xmcHost string
-	var httpPort uint
+	var xmcPort uint
 	var httpTimeout uint
 	var insecureHTTPS bool
-	var httpUsername string
-	var httpPassword string
+	var xmcUsername string
+	var xmcPassword string
 	var xmcQuery string
 	var printVersion bool
 
 	flag.StringVar(&xmcHost, "host", "", "XMC Hostname / IP")
-	flag.UintVar(&httpPort, "port", 8443, "HTTP port where XMC is listening")
+	flag.UintVar(&xmcPort, "port", 8443, "HTTP port where XMC is listening")
 	flag.UintVar(&httpTimeout, "httptimeout", 5, "Timeout for HTTP(S) connections")
 	flag.BoolVar(&insecureHTTPS, "insecurehttps", false, "Do not validate HTTPS certificates")
-	flag.StringVar(&httpUsername, "username", "admin", "Username for HTTP auth")
-	flag.StringVar(&httpPassword, "password", "", "Password for HTTP auth")
+	flag.StringVar(&xmcUsername, "username", "admin", "Username for HTTP auth")
+	flag.StringVar(&xmcPassword, "password", "", "Password for HTTP auth")
 	flag.StringVar(&xmcQuery, "query", "query { network { devices { up ip sysName nickName } } }", "GraphQL query to send to XMC")
 	flag.BoolVar(&printVersion, "version", false, "Print version information and exit")
 	flag.Usage = func() {
@@ -87,7 +87,7 @@ func main() {
 		os.Exit(errMissArg)
 	}
 
-	var apiURL string = "https://" + xmcHost + ":" + fmt.Sprint(httpPort) + "/nbi/graphql"
+	var apiURL string = "https://" + xmcHost + ":" + fmt.Sprint(xmcPort) + "/nbi/graphql"
 	httpTransport := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecureHTTPS},
 	}
@@ -104,7 +104,7 @@ func main() {
 
 	req.Header.Set("User-Agent", httpUserAgent)
 	req.Header.Set("Accept", jsonMimeType)
-	req.SetBasicAuth(httpUsername, httpPassword)
+	req.SetBasicAuth(xmcUsername, xmcPassword)
 
 	httpQuery := req.URL.Query()
 	httpQuery.Add("query", xmcQuery)
