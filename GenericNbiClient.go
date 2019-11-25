@@ -31,6 +31,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -48,13 +49,25 @@ const (
 	errHTTPResponse int    = 12 // Error parsing the HTTPS response
 )
 
+func getEnvUint(name string) uint {
+	strVal := os.Getenv(name)
+	uintVal, _ := strconv.Atoi(strVal)
+	return uint(uintVal)
+}
+
+func getEnvBool(name string) bool {
+	strVal := os.Getenv(name)
+	boolVal, _ := strconv.ParseBool(strVal)
+	return boolVal
+}
+
 func main() {
-	var xmcHost string
-	var xmcPort uint
+	var xmcHost string = os.Getenv("XMCHOST")
+	var xmcPort uint = getEnvUint("XMCPORT")
 	var httpTimeout uint
-	var insecureHTTPS bool
-	var xmcUsername string
-	var xmcPassword string
+	var insecureHTTPS bool = getEnvBool("XMCINSECURE")
+	var xmcUsername string = os.Getenv("XMCUSER")
+	var xmcPassword string = os.Getenv("XMCPASS")
 	var xmcQuery string
 	var printVersion bool
 
