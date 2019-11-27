@@ -22,6 +22,7 @@ Tested with go1.11 and go1.13.
 `GenericNbiClient -h`:
 
 <pre>
+Available options:
   -host string
         XMC Hostname / IP
   -httptimeout uint
@@ -38,6 +39,13 @@ Tested with go1.11 and go1.13.
         Username for HTTP auth (default "admin")
   -version
         Print version information and exit
+
+Some options can be set via environment variables:
+  XMCHOST      -->  -host
+  XMCPORT      -->  -port
+  XMCINSECURE  -->  -insecurehttps
+  XMCUSERNAME  -->  -username
+  XMCPASSWORD  -->  -password
 </pre>
 
 ## Source
