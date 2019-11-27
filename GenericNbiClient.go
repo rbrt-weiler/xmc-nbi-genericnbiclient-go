@@ -36,11 +36,16 @@ import (
 	"time"
 )
 
+// Definitions used within the code.
 const (
-	toolName        string = "BELL XMC NBI GenericNbiClient.go"
-	toolVersion     string = "0.3.1"
+	toolName        string = "XMC NBI GenericNbiClient.go"
+	toolVersion     string = "0.4.0"
 	httpUserAgent   string = toolName + "/" + toolVersion
 	jsonMimeType    string = "application/json"
+)
+
+// Error codes.
+const (
 	errSuccess      int    = 0  // No error
 	errUsage        int    = 1  // Usage error
 	errMissArg      int    = 2  // Missing arguments
@@ -49,34 +54,58 @@ const (
 	errHTTPResponse int    = 12 // Error parsing the HTTPS response
 )
 
-func getEnvUint(name string) uint {
-	strVal := os.Getenv(name)
-	uintVal, _ := strconv.Atoi(strVal)
-	return uint(uintVal)
+// getEnvString returns the string value of the environment variable
+// "name" or "defaultVal" if that variable does not exist.
+func getEnvString(name string, defaultVal string) string {
+	retVal := defaultVal
+	envVal, ok := os.LookupEnv(name)
+	if ok {
+		retVal = envVal
+	}
+	return retVal
 }
 
-func getEnvBool(name string) bool {
-	strVal := os.Getenv(name)
-	boolVal, _ := strconv.ParseBool(strVal)
-	return boolVal
+// getEnvUint returns the uint value of the environment variable "name" or
+// "defaultVal" if that variable does not exist.
+func getEnvUint(name string, defaultVal uint) uint {
+	retVal := defaultVal
+	envVal, ok := os.LookupEnv(name)
+	if ok {
+		intVal, _ := strconv.Atoi(envVal)
+		retVal = uint(intVal)
+	}
+	return retVal
+}
+
+// getEnvBool returns the bool value of the environment variable "name" or
+// "defaultVal" if that variable does not exist.
+func getEnvBool(name string, defaultVal bool) bool {
+	retVal := defaultVal
+	envVal, ok := os.LookupEnv(name)
+	if ok {
+		retVal, _ = strconv.ParseBool(envVal)
+	}
+	return retVal
 }
 
 func main() {
-	var xmcHost string = os.Getenv("XMCHOST")
-	var xmcPort uint = getEnvUint("XMCPORT")
+	// Variables used for storing CLI options.
+	var xmcHost string
+	var xmcPort uint
 	var httpTimeout uint
-	var insecureHTTPS bool = getEnvBool("XMCINSECURE")
-	var xmcUsername string = os.Getenv("XMCUSER")
-	var xmcPassword string = os.Getenv("XMCPASS")
+	var insecureHTTPS bool
+	var xmcUsername string
+	var xmcPassword string
 	var xmcQuery string
 	var printVersion bool
 
-	flag.StringVar(&xmcHost, "host", "", "XMC Hostname / IP")
-	flag.UintVar(&xmcPort, "port", 8443, "HTTP port where XMC is listening")
+	// Parse all valid CLI options into variables.
+	flag.StringVar(&xmcHost, "host", getEnvString("XMCHOST", ""), "XMC Hostname / IP")
+	flag.UintVar(&xmcPort, "port", getEnvUint("XMCPORT", 8443), "HTTP port where XMC is listening")
 	flag.UintVar(&httpTimeout, "httptimeout", 5, "Timeout for HTTP(S) connections")
-	flag.BoolVar(&insecureHTTPS, "insecurehttps", false, "Do not validate HTTPS certificates")
-	flag.StringVar(&xmcUsername, "username", "admin", "Username for HTTP auth")
-	flag.StringVar(&xmcPassword, "password", "", "Password for HTTP auth")
+	flag.BoolVar(&insecureHTTPS, "insecurehttps", getEnvBool("XMCINSECURE", false), "Do not validate HTTPS certificates")
+	flag.StringVar(&xmcUsername, "username", getEnvString("XMCUSERNAME", "admin"), "Username for HTTP auth")
+	flag.StringVar(&xmcPassword, "password", getEnvString("XMCPASSWORD", ""), "Password for HTTP auth")
 	flag.StringVar(&xmcQuery, "query", "query { network { devices { up ip sysName nickName } } }", "GraphQL query to send to XMC")
 	flag.BoolVar(&printVersion, "version", false, "Print version information and exit")
 	flag.Usage = func() {
@@ -86,20 +115,30 @@ func main() {
 		fmt.Fprintf(os.Stderr, "\n")
 		fmt.Fprintf(os.Stderr, "Available options:\n")
 		flag.PrintDefaults()
+		fmt.Fprintf(os.Stderr, "\n")
+		fmt.Fprintf(os.Stderr, "Some options can be set via environment variables:\n")
+		fmt.Fprintf(os.Stderr, "  XMCHOST      -->  -host\n")
+		fmt.Fprintf(os.Stderr, "  XMCPORT      -->  -port\n")
+		fmt.Fprintf(os.Stderr, "  XMCINSECURE  -->  -insecurehttps\n")
+		fmt.Fprintf(os.Stderr, "  XMCUSERNAME  -->  -username\n")
+		fmt.Fprintf(os.Stderr, "  XMCPASSWORD  -->  -password\n")
 		os.Exit(errUsage)
 	}
 	flag.Parse()
 
+	// Print version information and exit.
 	if printVersion {
 		fmt.Println(httpUserAgent)
 		os.Exit(errSuccess)
 	}
 
+	// Check that the option "host" has been set.
 	if xmcHost == "" {
 		fmt.Fprintln(os.Stderr, "Variable -host must be defined. Use -h to get help.")
 		os.Exit(errMissArg)
 	}
 
+	// Create an HTTP client to talk to the API.
 	var apiURL string = "https://" + xmcHost + ":" + fmt.Sprint(xmcPort) + "/nbi/graphql"
 	httpTransport := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecureHTTPS},
@@ -109,20 +148,22 @@ func main() {
 		Timeout:   time.Second * time.Duration(httpTimeout),
 	}
 
+	// Generate an actual HTTP request.
 	req, reqErr := http.NewRequest(http.MethodGet, apiURL, nil)
 	if reqErr != nil {
 		fmt.Fprintf(os.Stderr, "Error: Could not create HTTPS request: %s\n", reqErr)
 		os.Exit(errHTTPRequest)
 	}
-
 	req.Header.Set("User-Agent", httpUserAgent)
 	req.Header.Set("Accept", jsonMimeType)
 	req.SetBasicAuth(xmcUsername, xmcPassword)
 
+	// Generate a query string to transport the GraphQL query.
 	httpQuery := req.URL.Query()
 	httpQuery.Add("query", xmcQuery)
 	req.URL.RawQuery = httpQuery.Encode()
 
+	// Try to get a result from the API.
 	res, getErr := nbiClient.Do(req)
 	if getErr != nil {
 		fmt.Fprintf(os.Stderr, "Error: Could not connect to XMC: %s\n", getErr)
@@ -133,11 +174,14 @@ func main() {
 		os.Exit(errXMCConnect)
 	}
 
+	// Check if the HTTP response has yielded the expected content type.
 	resContentType := res.Header.Get("Content-Type")
 	if strings.Index(resContentType, jsonMimeType) != 0 {
 		fmt.Fprintf(os.Stderr, "Error: Content-Type %s returned instead of %s\n", resContentType, jsonMimeType)
 		os.Exit(errHTTPResponse)
 	}
+
+	// Read and print the body of the HTTP response to stdout.
 	body, readErr := ioutil.ReadAll(res.Body)
 	if readErr != nil {
 		fmt.Fprintf(os.Stderr, "Error: Could not read server response: %s\n", readErr)
@@ -145,5 +189,6 @@ func main() {
 	}
 	fmt.Println(string(body))
 
+	// Indicate a successful execution of the program.
 	os.Exit(errSuccess)
 }
