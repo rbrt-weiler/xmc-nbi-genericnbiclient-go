@@ -40,12 +40,14 @@ Available options:
   -version
         Print version information and exit
 
-Some options can be set via environment variables:
+All options that take a value can be set via environment variables:
   XMCHOST      -->  -host
   XMCPORT      -->  -port
   XMCINSECURE  -->  -insecurehttps
+  XMCTIMEOUT   -->  -httptimeout
   XMCUSERNAME  -->  -username
   XMCPASSWORD  -->  -password
+  XMCQUERY     -->  -query
 </pre>
 
 ## Source

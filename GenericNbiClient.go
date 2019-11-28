@@ -38,25 +38,25 @@ import (
 
 // Definitions used within the code.
 const (
-	toolName        string = "XMC NBI GenericNbiClient.go"
-	toolVersion     string = "0.4.0"
-	httpUserAgent   string = toolName + "/" + toolVersion
-	jsonMimeType    string = "application/json"
+	toolName      string = "XMC NBI GenericNbiClient.go"
+	toolVersion   string = "0.5.0"
+	httpUserAgent string = toolName + "/" + toolVersion
+	jsonMimeType  string = "application/json"
 )
 
 // Error codes.
 const (
-	errSuccess      int    = 0  // No error
-	errUsage        int    = 1  // Usage error
-	errMissArg      int    = 2  // Missing arguments
-	errHTTPRequest  int    = 10 // Error creating the HTTPS request
-	errXMCConnect   int    = 11 // Error connecting to XMC
-	errHTTPResponse int    = 12 // Error parsing the HTTPS response
+	errSuccess      int = 0  // No error
+	errUsage        int = 1  // Usage error
+	errMissArg      int = 2  // Missing arguments
+	errHTTPRequest  int = 10 // Error creating the HTTPS request
+	errXMCConnect   int = 11 // Error connecting to XMC
+	errHTTPResponse int = 12 // Error parsing the HTTPS response
 )
 
-// getEnvString returns the string value of the environment variable
+// getEnvOrDefaultString returns the string value of the environment variable
 // "name" or "defaultVal" if that variable does not exist.
-func getEnvString(name string, defaultVal string) string {
+func getEnvOrDefaultString(name string, defaultVal string) string {
 	retVal := defaultVal
 	envVal, ok := os.LookupEnv(name)
 	if ok {
@@ -65,9 +65,9 @@ func getEnvString(name string, defaultVal string) string {
 	return retVal
 }
 
-// getEnvUint returns the uint value of the environment variable "name" or
-// "defaultVal" if that variable does not exist.
-func getEnvUint(name string, defaultVal uint) uint {
+// getEnvOrDefaultUint returns the uint value of the environment variable
+// "name" or "defaultVal" if that variable does not exist.
+func getEnvOrDefaultUint(name string, defaultVal uint) uint {
 	retVal := defaultVal
 	envVal, ok := os.LookupEnv(name)
 	if ok {
@@ -77,9 +77,9 @@ func getEnvUint(name string, defaultVal uint) uint {
 	return retVal
 }
 
-// getEnvBool returns the bool value of the environment variable "name" or
-// "defaultVal" if that variable does not exist.
-func getEnvBool(name string, defaultVal bool) bool {
+// getEnvOrDefaultBool returns the bool value of the environment variable
+// "name" or "defaultVal" if that variable does not exist.
+func getEnvOrDefaultBool(name string, defaultVal bool) bool {
 	retVal := defaultVal
 	envVal, ok := os.LookupEnv(name)
 	if ok {
@@ -100,13 +100,13 @@ func main() {
 	var printVersion bool
 
 	// Parse all valid CLI options into variables.
-	flag.StringVar(&xmcHost, "host", getEnvString("XMCHOST", ""), "XMC Hostname / IP")
-	flag.UintVar(&xmcPort, "port", getEnvUint("XMCPORT", 8443), "HTTP port where XMC is listening")
-	flag.UintVar(&httpTimeout, "httptimeout", 5, "Timeout for HTTP(S) connections")
-	flag.BoolVar(&insecureHTTPS, "insecurehttps", getEnvBool("XMCINSECURE", false), "Do not validate HTTPS certificates")
-	flag.StringVar(&xmcUsername, "username", getEnvString("XMCUSERNAME", "admin"), "Username for HTTP auth")
-	flag.StringVar(&xmcPassword, "password", getEnvString("XMCPASSWORD", ""), "Password for HTTP auth")
-	flag.StringVar(&xmcQuery, "query", "query { network { devices { up ip sysName nickName } } }", "GraphQL query to send to XMC")
+	flag.StringVar(&xmcHost, "host", getEnvOrDefaultString("XMCHOST", ""), "XMC Hostname / IP")
+	flag.UintVar(&xmcPort, "port", getEnvOrDefaultUint("XMCPORT", 8443), "HTTP port where XMC is listening")
+	flag.UintVar(&httpTimeout, "httptimeout", getEnvOrDefaultUint("XMCTIMEOUT", 5), "Timeout for HTTP(S) connections")
+	flag.BoolVar(&insecureHTTPS, "insecurehttps", getEnvOrDefaultBool("XMCINSECURE", false), "Do not validate HTTPS certificates")
+	flag.StringVar(&xmcUsername, "username", getEnvOrDefaultString("XMCUSERNAME", "admin"), "Username for HTTP auth")
+	flag.StringVar(&xmcPassword, "password", getEnvOrDefaultString("XMCPASSWORD", ""), "Password for HTTP auth")
+	flag.StringVar(&xmcQuery, "query", getEnvOrDefaultString("XMCQUERY", "query { network { devices { up ip sysName nickName } } }"), "GraphQL query to send to XMC")
 	flag.BoolVar(&printVersion, "version", false, "Print version information and exit")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "This tool queries the XMC API and prints the raw reply (JSON) to stdout.\n")
@@ -116,12 +116,14 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Available options:\n")
 		flag.PrintDefaults()
 		fmt.Fprintf(os.Stderr, "\n")
-		fmt.Fprintf(os.Stderr, "Some options can be set via environment variables:\n")
+		fmt.Fprintf(os.Stderr, "All options that take a value can be set via environment variables:\n")
 		fmt.Fprintf(os.Stderr, "  XMCHOST      -->  -host\n")
 		fmt.Fprintf(os.Stderr, "  XMCPORT      -->  -port\n")
 		fmt.Fprintf(os.Stderr, "  XMCINSECURE  -->  -insecurehttps\n")
+		fmt.Fprintf(os.Stderr, "  XMCTIMEOUT   -->  -httptimeout\n")
 		fmt.Fprintf(os.Stderr, "  XMCUSERNAME  -->  -username\n")
 		fmt.Fprintf(os.Stderr, "  XMCPASSWORD  -->  -password\n")
+		fmt.Fprintf(os.Stderr, "  XMCQUERY     -->  -query\n")
 		os.Exit(errUsage)
 	}
 	flag.Parse()
@@ -173,7 +175,6 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error: Got status code %d instead of 200\n", res.StatusCode)
 		os.Exit(errXMCConnect)
 	}
-
 	// Check if the HTTP response has yielded the expected content type.
 	resContentType := res.Header.Get("Content-Type")
 	if strings.Index(resContentType, jsonMimeType) != 0 {
