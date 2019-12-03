@@ -61,7 +61,7 @@ type OAuth2Token struct {
 // Definitions used within the code.
 const (
 	toolName      string = "XMC NBI GenericNbiClient.go"
-	toolVersion   string = "0.6.2"
+	toolVersion   string = "0.6.3"
 	httpUserAgent string = toolName + "/" + toolVersion
 	jsonMimeType  string = "application/json"
 )
@@ -155,6 +155,66 @@ func retrieveOAuthToken() (string, error) {
 	return OAuth.AccessToken, nil
 }
 
+// retrieveAPIResult sends the given query to XMC and returns the raw JSON result, an error code for os.Exit() and the actual error.
+func retrieveAPIResult(query string) (string, int, error) {
+	apiURL := "https://" + Config.XMCHost + ":" + fmt.Sprint(Config.XMCPort) + "/nbi/graphql"
+
+	// Generate an actual HTTP request.
+	jsonQuery, jsonQueryErr := json.Marshal(map[string]string{"query": query})
+	if jsonQueryErr != nil {
+		//fmt.Fprintf(os.Stderr, "Error: Could not encode query into JSON: %s", jsonQueryErr)
+		//os.Exit(errHTTPRequest)
+		return "", errHTTPRequest, fmt.Errorf("Could not encode query into JSON: %s", jsonQueryErr)
+	}
+	req, reqErr := http.NewRequest(http.MethodPost, apiURL, bytes.NewBuffer(jsonQuery))
+	if reqErr != nil {
+		//fmt.Fprintf(os.Stderr, "Error: Could not create HTTPS request: %s\n", reqErr)
+		//os.Exit(errHTTPRequest)
+		return "", errHTTPRequest, fmt.Errorf("Could not create HTTPS request: %s", reqErr)
+	}
+	req.Header.Set("User-Agent", httpUserAgent)
+	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("Content-Type", jsonMimeType)
+	req.Header.Set("Accept", jsonMimeType)
+	if Config.UseOAuth {
+		req.Header.Set("Authorization", "Bearer "+OAuth.AccessToken)
+	} else {
+		req.SetBasicAuth(Config.XMCUsername, Config.XMCPassword)
+	}
+
+	// Try to get a result from the API.
+	res, resErr := NBIClient.Do(req)
+	if resErr != nil {
+		//fmt.Fprintf(os.Stderr, "Error: Could not connect to XMC: %s\n", resErr)
+		//os.Exit(errXMCConnect)
+		return "", errXMCConnect, fmt.Errorf("Could not connect to XMC: %s", resErr)
+	}
+	if res.StatusCode != 200 {
+		//fmt.Fprintf(os.Stderr, "Error: Got status code %d instead of 200\n", res.StatusCode)
+		//os.Exit(errXMCConnect)
+		return "", errXMCConnect, fmt.Errorf("Got status code %d instead of 200", res.StatusCode)
+	}
+	defer res.Body.Close()
+
+	// Check if the HTTP response has yielded the expected content type.
+	resContentType := res.Header.Get("Content-Type")
+	if strings.Index(resContentType, jsonMimeType) != 0 {
+		//fmt.Fprintf(os.Stderr, "Error: Content-Type %s returned instead of %s\n", resContentType, jsonMimeType)
+		//os.Exit(errHTTPResponse)
+		return "", errHTTPResponse, fmt.Errorf("Content-Type %s returned instead of %s", resContentType, jsonMimeType)
+	}
+
+	// Read and print the body of the HTTP response to stdout.
+	body, readErr := ioutil.ReadAll(res.Body)
+	if readErr != nil {
+		//fmt.Fprintf(os.Stderr, "Error: Could not read server response: %s\n", readErr)
+		//os.Exit(errHTTPResponse)
+		return "", errHTTPResponse, fmt.Errorf("Could not read server response: %s", readErr)
+	}
+
+	return string(body), errSuccess, nil
+}
+
 func main() {
 	// Variables used for storing options that are not pushed to Config.
 	var xmcQuery string
@@ -227,55 +287,15 @@ func main() {
 		Config.UseOAuth = true
 	}
 
-	// Generate an actual HTTP request.
-	apiURL := "https://" + Config.XMCHost + ":" + fmt.Sprint(Config.XMCPort) + "/nbi/graphql"
-	jsonQuery, jsonQueryErr := json.Marshal(map[string]string{"query": xmcQuery})
-	if jsonQueryErr != nil {
-		fmt.Fprintf(os.Stderr, "Error: Could not encode query into JSON: %s", jsonQueryErr)
-		os.Exit(errHTTPRequest)
-	}
-	req, reqErr := http.NewRequest(http.MethodPost, apiURL, bytes.NewBuffer(jsonQuery))
-	if reqErr != nil {
-		fmt.Fprintf(os.Stderr, "Error: Could not create HTTPS request: %s\n", reqErr)
-		os.Exit(errHTTPRequest)
-	}
-	req.Header.Set("User-Agent", httpUserAgent)
-	req.Header.Set("Cache-Control", "no-cache")
-	req.Header.Set("Content-Type", jsonMimeType)
-	req.Header.Set("Accept", jsonMimeType)
-	if Config.UseOAuth {
-		req.Header.Set("Authorization", "Bearer "+OAuth.AccessToken)
+	// Call the API and print the result.
+	apiResult, exitCode, apiError := retrieveAPIResult(xmcQuery)
+	if apiError != nil {
+		fmt.Fprintf(os.Stderr, "Could not retrieve API result: %s\n", apiError)
+		os.Exit(exitCode)
 	} else {
-		req.SetBasicAuth(Config.XMCUsername, Config.XMCPassword)
+		fmt.Println(string(apiResult))
 	}
-
-	// Try to get a result from the API.
-	res, resErr := NBIClient.Do(req)
-	if resErr != nil {
-		fmt.Fprintf(os.Stderr, "Error: Could not connect to XMC: %s\n", resErr)
-		os.Exit(errXMCConnect)
-	}
-	if res.StatusCode != 200 {
-		fmt.Fprintf(os.Stderr, "Error: Got status code %d instead of 200\n", res.StatusCode)
-		os.Exit(errXMCConnect)
-	}
-	defer res.Body.Close()
-
-	// Check if the HTTP response has yielded the expected content type.
-	resContentType := res.Header.Get("Content-Type")
-	if strings.Index(resContentType, jsonMimeType) != 0 {
-		fmt.Fprintf(os.Stderr, "Error: Content-Type %s returned instead of %s\n", resContentType, jsonMimeType)
-		os.Exit(errHTTPResponse)
-	}
-
-	// Read and print the body of the HTTP response to stdout.
-	body, readErr := ioutil.ReadAll(res.Body)
-	if readErr != nil {
-		fmt.Fprintf(os.Stderr, "Error: Could not read server response: %s\n", readErr)
-		os.Exit(errHTTPResponse)
-	}
-	fmt.Println(string(body))
 
 	// Indicate a successful execution of the program.
-	os.Exit(errSuccess)
+	os.Exit(exitCode)
 }
