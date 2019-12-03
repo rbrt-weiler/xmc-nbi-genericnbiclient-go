@@ -61,7 +61,7 @@ type OAuth2Token struct {
 // Definitions used within the code.
 const (
 	toolName      string = "XMC NBI GenericNbiClient.go"
-	toolVersion   string = "0.6.1"
+	toolVersion   string = "0.6.2"
 	httpUserAgent string = toolName + "/" + toolVersion
 	jsonMimeType  string = "application/json"
 )
@@ -116,13 +116,12 @@ func getEnvOrDefaultBool(name string, defaultVal bool) bool {
 }
 
 // retrieveOAuthToken retrieves a usable OAuth token from XMC.
-func retrieveOAuthToken() bool {
+func retrieveOAuthToken() (string, error) {
 	tokenURL := "https://" + Config.XMCHost + ":" + fmt.Sprint(Config.XMCPort) + "/oauth/token/access-token?grant_type=client_credentials"
 
 	req, reqErr := http.NewRequest(http.MethodPost, tokenURL, nil)
 	if reqErr != nil {
-		fmt.Fprintf(os.Stderr, "Error: Could not create HTTPS request: %s\n", reqErr)
-		return false
+		return "", fmt.Errorf("Could not create HTTPS request: %s", reqErr)
 	}
 	req.Header.Set("User-Agent", httpUserAgent)
 	req.Header.Set("Accept", jsonMimeType)
@@ -131,34 +130,29 @@ func retrieveOAuthToken() bool {
 
 	res, resErr := NBIClient.Do(req)
 	if resErr != nil {
-		fmt.Fprintf(os.Stderr, "Error: Could not connect to XMC: %s\n", resErr)
-		return false
+		return "", fmt.Errorf("Could not connect to XMC: %s", resErr)
 	}
 	if res.StatusCode != 200 {
-		fmt.Fprintf(os.Stderr, "Error: Got status code %d instead of 200\n", res.StatusCode)
-		return false
+		return "", fmt.Errorf("Got status code %d instead of 200", res.StatusCode)
 	}
 	defer res.Body.Close()
 
 	resContentType := res.Header.Get("Content-Type")
 	if strings.Index(resContentType, jsonMimeType) != 0 {
-		fmt.Fprintf(os.Stderr, "Error: Content-Type %s returned instead of %s\n", resContentType, jsonMimeType)
-		return false
+		return "", fmt.Errorf("Content-Type %s returned instead of %s", resContentType, jsonMimeType)
 	}
 
 	xmcToken, readErr := ioutil.ReadAll(res.Body)
 	if readErr != nil {
-		fmt.Fprintf(os.Stderr, "Error: Could not read server response: %s\n", readErr)
-		return false
+		return "", fmt.Errorf("Could not read server response: %s", readErr)
 	}
 
 	jsonErr := json.Unmarshal(xmcToken, &OAuth)
 	if jsonErr != nil {
-		fmt.Fprintf(os.Stderr, "Error: Could not read server response: %s\n", jsonErr)
-		return false
+		return "", fmt.Errorf("Could not read server response: %s", jsonErr)
 	}
 
-	return true
+	return OAuth.AccessToken, nil
 }
 
 func main() {
@@ -225,7 +219,9 @@ func main() {
 	// Try to get an OAuth token if we have OAuth authentication data.
 	Config.UseOAuth = false
 	if Config.XMCClientID != "" && Config.XMCClientSecret != "" {
-		if retrieveOAuthToken() != true {
+		_, oAuthErr := retrieveOAuthToken()
+		if oAuthErr != nil {
+			fmt.Fprintf(os.Stderr, "Could not retrieve OAuth token: %s\n", oAuthErr)
 			os.Exit(errHTTPOAuth)
 		}
 		Config.UseOAuth = true
@@ -254,9 +250,9 @@ func main() {
 	}
 
 	// Try to get a result from the API.
-	res, getErr := NBIClient.Do(req)
+	res, resErr := NBIClient.Do(req)
 	if getErr != nil {
-		fmt.Fprintf(os.Stderr, "Error: Could not connect to XMC: %s\n", getErr)
+		fmt.Fprintf(os.Stderr, "Error: Could not connect to XMC: %s\n", resErr)
 		os.Exit(errXMCConnect)
 	}
 	if res.StatusCode != 200 {
