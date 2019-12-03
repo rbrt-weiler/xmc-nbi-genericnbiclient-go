@@ -162,14 +162,10 @@ func retrieveAPIResult(query string) (string, int, error) {
 	// Generate an actual HTTP request.
 	jsonQuery, jsonQueryErr := json.Marshal(map[string]string{"query": query})
 	if jsonQueryErr != nil {
-		//fmt.Fprintf(os.Stderr, "Error: Could not encode query into JSON: %s", jsonQueryErr)
-		//os.Exit(errHTTPRequest)
 		return "", errHTTPRequest, fmt.Errorf("Could not encode query into JSON: %s", jsonQueryErr)
 	}
 	req, reqErr := http.NewRequest(http.MethodPost, apiURL, bytes.NewBuffer(jsonQuery))
 	if reqErr != nil {
-		//fmt.Fprintf(os.Stderr, "Error: Could not create HTTPS request: %s\n", reqErr)
-		//os.Exit(errHTTPRequest)
 		return "", errHTTPRequest, fmt.Errorf("Could not create HTTPS request: %s", reqErr)
 	}
 	req.Header.Set("User-Agent", httpUserAgent)
@@ -185,13 +181,9 @@ func retrieveAPIResult(query string) (string, int, error) {
 	// Try to get a result from the API.
 	res, resErr := NBIClient.Do(req)
 	if resErr != nil {
-		//fmt.Fprintf(os.Stderr, "Error: Could not connect to XMC: %s\n", resErr)
-		//os.Exit(errXMCConnect)
 		return "", errXMCConnect, fmt.Errorf("Could not connect to XMC: %s", resErr)
 	}
 	if res.StatusCode != 200 {
-		//fmt.Fprintf(os.Stderr, "Error: Got status code %d instead of 200\n", res.StatusCode)
-		//os.Exit(errXMCConnect)
 		return "", errXMCConnect, fmt.Errorf("Got status code %d instead of 200", res.StatusCode)
 	}
 	defer res.Body.Close()
@@ -199,16 +191,12 @@ func retrieveAPIResult(query string) (string, int, error) {
 	// Check if the HTTP response has yielded the expected content type.
 	resContentType := res.Header.Get("Content-Type")
 	if strings.Index(resContentType, jsonMimeType) != 0 {
-		//fmt.Fprintf(os.Stderr, "Error: Content-Type %s returned instead of %s\n", resContentType, jsonMimeType)
-		//os.Exit(errHTTPResponse)
 		return "", errHTTPResponse, fmt.Errorf("Content-Type %s returned instead of %s", resContentType, jsonMimeType)
 	}
 
 	// Read and print the body of the HTTP response to stdout.
 	body, readErr := ioutil.ReadAll(res.Body)
 	if readErr != nil {
-		//fmt.Fprintf(os.Stderr, "Error: Could not read server response: %s\n", readErr)
-		//os.Exit(errHTTPResponse)
 		return "", errHTTPResponse, fmt.Errorf("Could not read server response: %s", readErr)
 	}
 
