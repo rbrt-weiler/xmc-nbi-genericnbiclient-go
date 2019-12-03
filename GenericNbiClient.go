@@ -251,7 +251,7 @@ func main() {
 
 	// Try to get a result from the API.
 	res, resErr := NBIClient.Do(req)
-	if getErr != nil {
+	if resErr != nil {
 		fmt.Fprintf(os.Stderr, "Error: Could not connect to XMC: %s\n", resErr)
 		os.Exit(errXMCConnect)
 	}
