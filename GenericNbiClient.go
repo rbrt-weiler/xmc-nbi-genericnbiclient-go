@@ -24,6 +24,7 @@ SOFTWARE.
 package main
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"flag"
@@ -59,7 +60,7 @@ type OAuth2Token struct {
 // Definitions used within the code.
 const (
 	toolName      string = "XMC NBI GenericNbiClient.go"
-	toolVersion   string = "0.6.0-dev"
+	toolVersion   string = "0.6.0"
 	httpUserAgent string = toolName + "/" + toolVersion
 	jsonMimeType  string = "application/json"
 )
@@ -82,8 +83,7 @@ var (
 	OAuth     OAuth2Token
 )
 
-// getEnvOrDefaultString returns the string value of the environment variable
-// "name" or "defaultVal" if that variable does not exist.
+// getEnvOrDefaultString returns the string value of the environment variable "name" or "defaultVal" if that variable does not exist.
 func getEnvOrDefaultString(name string, defaultVal string) string {
 	retVal := defaultVal
 	envVal, ok := os.LookupEnv(name)
@@ -93,8 +93,7 @@ func getEnvOrDefaultString(name string, defaultVal string) string {
 	return retVal
 }
 
-// getEnvOrDefaultUint returns the uint value of the environment variable
-// "name" or "defaultVal" if that variable does not exist.
+// getEnvOrDefaultUint returns the uint value of the environment variable "name" or "defaultVal" if that variable does not exist.
 func getEnvOrDefaultUint(name string, defaultVal uint) uint {
 	retVal := defaultVal
 	envVal, ok := os.LookupEnv(name)
@@ -105,8 +104,7 @@ func getEnvOrDefaultUint(name string, defaultVal uint) uint {
 	return retVal
 }
 
-// getEnvOrDefaultBool returns the bool value of the environment variable
-// "name" or "defaultVal" if that variable does not exist.
+// getEnvOrDefaultBool returns the bool value of the environment variable "name" or "defaultVal" if that variable does not exist.
 func getEnvOrDefaultBool(name string, defaultVal bool) bool {
 	retVal := defaultVal
 	envVal, ok := os.LookupEnv(name)
@@ -139,6 +137,7 @@ func retrieveOAuthToken() bool {
 		fmt.Fprintf(os.Stderr, "Error: Got status code %d instead of 200\n", res.StatusCode)
 		return false
 	}
+	defer res.Body.Close()
 
 	resContentType := res.Header.Get("Content-Type")
 	if strings.Index(resContentType, jsonMimeType) != 0 {
@@ -151,7 +150,6 @@ func retrieveOAuthToken() bool {
 		fmt.Fprintf(os.Stderr, "Error: Could not read server response: %s\n", readErr)
 		return false
 	}
-	defer res.Body.Close()
 
 	jsonErr := json.Unmarshal(xmcToken, &OAuth)
 	if jsonErr != nil {
@@ -234,25 +232,26 @@ func main() {
 	}
 
 	// Generate an actual HTTP request.
-	var apiURL string = "https://" + Config.XMCHost + ":" + fmt.Sprint(Config.XMCPort) + "/nbi/graphql"
-	req, reqErr := http.NewRequest(http.MethodGet, apiURL, nil)
+	apiURL := "https://" + Config.XMCHost + ":" + fmt.Sprint(Config.XMCPort) + "/nbi/graphql"
+	jsonQuery, jsonQueryErr := json.Marshal(map[string]string{"query": xmcQuery})
+	if jsonQueryErr != nil {
+		fmt.Fprintf(os.Stderr, "Error: Could not encode query into JSON: %s", jsonQueryErr)
+		os.Exit(errHTTPRequest)
+	}
+	req, reqErr := http.NewRequest(http.MethodPost, apiURL, bytes.NewBuffer(jsonQuery))
 	if reqErr != nil {
 		fmt.Fprintf(os.Stderr, "Error: Could not create HTTPS request: %s\n", reqErr)
 		os.Exit(errHTTPRequest)
 	}
 	req.Header.Set("User-Agent", httpUserAgent)
 	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("Content-Type", jsonMimeType)
 	req.Header.Set("Accept", jsonMimeType)
 	if useOAuth {
 		req.Header.Set("Authorization", "Bearer "+OAuth.AccessToken)
 	} else {
 		req.SetBasicAuth(Config.XMCUsername, Config.XMCPassword)
 	}
-
-	// Generate a query string to transport the GraphQL query.
-	httpQuery := req.URL.Query()
-	httpQuery.Add("query", xmcQuery)
-	req.URL.RawQuery = httpQuery.Encode()
 
 	// Try to get a result from the API.
 	res, getErr := NBIClient.Do(req)
@@ -264,6 +263,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error: Got status code %d instead of 200\n", res.StatusCode)
 		os.Exit(errXMCConnect)
 	}
+	defer res.Body.Close()
 
 	// Check if the HTTP response has yielded the expected content type.
 	resContentType := res.Header.Get("Content-Type")
@@ -278,7 +278,6 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error: Could not read server response: %s\n", readErr)
 		os.Exit(errHTTPResponse)
 	}
-	defer res.Body.Close()
 	fmt.Println(string(body))
 
 	// Indicate a successful execution of the program.
