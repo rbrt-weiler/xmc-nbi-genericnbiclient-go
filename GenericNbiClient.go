@@ -49,6 +49,7 @@ type AppConfig struct {
 	XMCUsername     string
 	XMCPassword     string
 	XMCQuery        string
+	UseOAuth        bool
 }
 
 // OAuth2Token stores the OAuth2 Token used for authentication.
@@ -60,7 +61,7 @@ type OAuth2Token struct {
 // Definitions used within the code.
 const (
 	toolName      string = "XMC NBI GenericNbiClient.go"
-	toolVersion   string = "0.6.0"
+	toolVersion   string = "0.6.1"
 	httpUserAgent string = toolName + "/" + toolVersion
 	jsonMimeType  string = "application/json"
 )
@@ -164,7 +165,6 @@ func main() {
 	// Variables used for storing options that are not pushed to Config.
 	var xmcQuery string
 	var printVersion bool
-	var useOAuth bool
 
 	// Parse all valid CLI options into variables.
 	flag.StringVar(&Config.XMCHost, "host", getEnvOrDefaultString("XMCHOST", ""), "XMC Hostname / IP")
@@ -223,12 +223,12 @@ func main() {
 	}
 
 	// Try to get an OAuth token if we have OAuth authentication data.
-	useOAuth = false
+	Config.UseOAuth = false
 	if Config.XMCClientID != "" && Config.XMCClientSecret != "" {
 		if retrieveOAuthToken() != true {
 			os.Exit(errHTTPOAuth)
 		}
-		useOAuth = true
+		Config.UseOAuth = true
 	}
 
 	// Generate an actual HTTP request.
@@ -247,7 +247,7 @@ func main() {
 	req.Header.Set("Cache-Control", "no-cache")
 	req.Header.Set("Content-Type", jsonMimeType)
 	req.Header.Set("Accept", jsonMimeType)
-	if useOAuth {
+	if Config.UseOAuth {
 		req.Header.Set("Authorization", "Bearer "+OAuth.AccessToken)
 	} else {
 		req.SetBasicAuth(Config.XMCUsername, Config.XMCPassword)
