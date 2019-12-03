@@ -15,7 +15,7 @@ Other branches, for example for developing specific features, may be created and
 
 Use `go run GenericNbiClient.go` to run the tool directly or `go build GenericNbiClient.go` to compile a binary.
 
-Tested with go1.11 and go1.13.
+Tested with go1.13.
 
 ## Usage
 
@@ -23,6 +23,10 @@ Tested with go1.11 and go1.13.
 
 <pre>
 Available options:
+  -clientid string
+        Client ID for OAuth2
+  -clientsecret string
+        Client Secret for OAuth2
   -host string
         XMC Hostname / IP
   -httptimeout uint
@@ -40,12 +44,18 @@ Available options:
   -version
         Print version information and exit
 
-Some options can be set via environment variables:
-  XMCHOST      -->  -host
-  XMCPORT      -->  -port
-  XMCINSECURE  -->  -insecurehttps
-  XMCUSERNAME  -->  -username
-  XMCPASSWORD  -->  -password
+OAuth2 will be preferred over username/password.
+
+All options that take a value can be set via environment variables:
+  XMCHOST          -->  -host
+  XMCPORT          -->  -port
+  XMCINSECURE      -->  -insecurehttps
+  XMCTIMEOUT       -->  -httptimeout
+  XMCCLIENTID      -->  -clientid
+  XMCCLIENTSECRET  -->  -clientsecret
+  XMCUSERNAME      -->  -username
+  XMCPASSWORD      -->  -password
+  XMCQUERY         -->  -query
 </pre>
 
 ## Source
