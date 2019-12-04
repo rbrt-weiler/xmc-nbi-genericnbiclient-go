@@ -50,6 +50,7 @@ type AppConfig struct {
 	XMCPassword     string
 	XMCQuery        string
 	UseOAuth        bool
+	PrintVersion    bool
 }
 
 // OAuth2Token stores the OAuth2 Token used for authentication.
@@ -61,7 +62,7 @@ type OAuth2Token struct {
 // Definitions used within the code.
 const (
 	toolName      string = "XMC NBI GenericNbiClient.go"
-	toolVersion   string = "0.6.4"
+	toolVersion   string = "0.6.5"
 	httpUserAgent string = toolName + "/" + toolVersion
 	jsonMimeType  string = "application/json"
 )
@@ -119,15 +120,18 @@ func getEnvOrDefaultBool(name string, defaultVal bool) bool {
 func retrieveOAuthToken() (string, int, error) {
 	tokenURL := "https://" + Config.XMCHost + ":" + fmt.Sprint(Config.XMCPort) + "/oauth/token/access-token?grant_type=client_credentials"
 
+	// Generate an actual HTTP request.
 	req, reqErr := http.NewRequest(http.MethodPost, tokenURL, nil)
 	if reqErr != nil {
 		return "", errHTTPRequest, fmt.Errorf("Could not create HTTPS request: %s", reqErr)
 	}
 	req.Header.Set("User-Agent", httpUserAgent)
+	req.Header.Set("Cache-Control", "no-cache")
 	req.Header.Set("Accept", jsonMimeType)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.SetBasicAuth(Config.XMCClientID, Config.XMCClientSecret)
 
+	// Try to get a result from the API.
 	res, resErr := NBIClient.Do(req)
 	if resErr != nil {
 		return "", errXMCConnect, fmt.Errorf("Could not connect to XMC: %s", resErr)
@@ -137,16 +141,17 @@ func retrieveOAuthToken() (string, int, error) {
 	}
 	defer res.Body.Close()
 
+	// Check if the HTTP response has yielded the expected content type.
 	resContentType := res.Header.Get("Content-Type")
 	if strings.Index(resContentType, jsonMimeType) != 0 {
 		return "", errHTTPResponse, fmt.Errorf("Content-Type %s returned instead of %s", resContentType, jsonMimeType)
 	}
 
+	// Read and parse the body of the HTTP response.
 	xmcToken, readErr := ioutil.ReadAll(res.Body)
 	if readErr != nil {
 		return "", errHTTPResponse, fmt.Errorf("Could not read server response: %s", readErr)
 	}
-
 	jsonErr := json.Unmarshal(xmcToken, &OAuth)
 	if jsonErr != nil {
 		return "", errHTTPResponse, fmt.Errorf("Could not read server response: %s", jsonErr)
@@ -194,7 +199,7 @@ func retrieveAPIResult(query string) (string, int, error) {
 		return "", errHTTPResponse, fmt.Errorf("Content-Type %s returned instead of %s", resContentType, jsonMimeType)
 	}
 
-	// Read and print the body of the HTTP response to stdout.
+	// Read the body of the HTTP response.
 	body, readErr := ioutil.ReadAll(res.Body)
 	if readErr != nil {
 		return "", errHTTPResponse, fmt.Errorf("Could not read server response: %s", readErr)
@@ -203,12 +208,7 @@ func retrieveAPIResult(query string) (string, int, error) {
 	return string(body), errSuccess, nil
 }
 
-func main() {
-	// Variables used for storing options that are not pushed to Config.
-	var xmcQuery string
-	var printVersion bool
-
-	// Parse all valid CLI options into variables.
+func parseCLIOptions() {
 	flag.StringVar(&Config.XMCHost, "host", getEnvOrDefaultString("XMCHOST", ""), "XMC Hostname / IP")
 	flag.UintVar(&Config.XMCPort, "port", getEnvOrDefaultUint("XMCPORT", 8443), "HTTP port where XMC is listening")
 	flag.UintVar(&Config.HTTPTimeout, "httptimeout", getEnvOrDefaultUint("XMCTIMEOUT", 5), "Timeout for HTTP(S) connections")
@@ -217,8 +217,8 @@ func main() {
 	flag.StringVar(&Config.XMCClientSecret, "clientsecret", getEnvOrDefaultString("XMCCLIENTSECRET", ""), "Client Secret for OAuth2")
 	flag.StringVar(&Config.XMCUsername, "username", getEnvOrDefaultString("XMCUSERNAME", "admin"), "Username for HTTP auth")
 	flag.StringVar(&Config.XMCPassword, "password", getEnvOrDefaultString("XMCPASSWORD", ""), "Password for HTTP auth")
-	flag.StringVar(&xmcQuery, "query", getEnvOrDefaultString("XMCQUERY", "query { network { devices { up ip sysName nickName } } }"), "GraphQL query to send to XMC")
-	flag.BoolVar(&printVersion, "version", false, "Print version information and exit")
+	flag.StringVar(&Config.XMCQuery, "query", getEnvOrDefaultString("XMCQUERY", "query { network { devices { up ip sysName nickName } } }"), "GraphQL query to send to XMC")
+	flag.BoolVar(&Config.PrintVersion, "version", false, "Print version information and exit")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "This tool queries the XMC API and prints the raw reply (JSON) to stdout.\n")
 		fmt.Fprintf(os.Stderr, "\n")
@@ -242,9 +242,14 @@ func main() {
 		os.Exit(errUsage)
 	}
 	flag.Parse()
+}
+
+func main() {
+	// Parse all valid CLI options into variables.
+	parseCLIOptions()
 
 	// Print version information and exit.
-	if printVersion {
+	if Config.PrintVersion {
 		fmt.Println(httpUserAgent)
 		os.Exit(errSuccess)
 	}
@@ -276,14 +281,13 @@ func main() {
 	}
 
 	// Call the API and print the result.
-	apiResult, exitCode, apiError := retrieveAPIResult(xmcQuery)
+	apiResult, exitCode, apiError := retrieveAPIResult(Config.XMCQuery)
 	if apiError != nil {
 		fmt.Fprintf(os.Stderr, "Could not retrieve API result: %s\n", apiError)
-		os.Exit(exitCode)
 	} else {
 		fmt.Println(string(apiResult))
 	}
 
-	// Indicate a successful execution of the program.
+	// Exit with an appropriate exit code.
 	os.Exit(exitCode)
 }
