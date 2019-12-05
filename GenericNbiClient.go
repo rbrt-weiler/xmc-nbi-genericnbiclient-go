@@ -26,6 +26,7 @@ package main
 import (
 	"bytes"
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -55,14 +56,30 @@ type AppConfig struct {
 
 // OAuth2Token stores the OAuth2 Token used for authentication.
 type OAuth2Token struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
+	TokenType     string `json:"token_type"`
+	AccessToken   string `json:"access_token"`
+	TokenElements OAuth2TokenElements
+}
+
+// OAuth2TokenElements stores decoded information contained in a valid OAuth2 token.
+type OAuth2TokenElements struct {
+	Issuer           string   `json:"iss,omitempty"`
+	Subject          string   `json:"sub,omitempty"`
+	JWTID            string   `json:"jti,omitempty"`
+	Roles            []string `json:"roles,omitempty"`
+	IsuedAtUnixfmt   int64    `json:"iat,omitempty"`
+	NotBeforeUnixfmt int64    `json:"nbf,omitempty"`
+	ExpiresAtUnixfmt int64    `json:"exp,omitempty"`
+	IssuedAt         time.Time
+	NotBefore        time.Time
+	ExpiresAt        time.Time
+	LongLived        bool `json:"longLived,omitempty"`
 }
 
 // Definitions used within the code.
 const (
 	toolName      string = "XMC NBI GenericNbiClient.go"
-	toolVersion   string = "0.6.5"
+	toolVersion   string = "0.6.6"
 	httpUserAgent string = toolName + "/" + toolVersion
 	jsonMimeType  string = "application/json"
 )
@@ -158,6 +175,31 @@ func retrieveOAuthToken() (string, int, error) {
 	}
 
 	return OAuth.AccessToken, errSuccess, nil
+}
+
+// decodeOAuthToken decodes certain parts of the OAuth token.
+func decodeOAuthToken() (OAuth2TokenElements, error) {
+	var tokenElements OAuth2TokenElements
+
+	// Seperate and base64 decode the relevant part of the token.
+	tokenParts := strings.Split(OAuth.AccessToken, ".")
+	tokenData, tokenErr := base64.StdEncoding.DecodeString(fmt.Sprintf("%s==", tokenParts[1]))
+	if tokenErr != nil {
+		return tokenElements, tokenErr
+	}
+
+	// Parse the JSON into our struct.
+	decodeErr := json.Unmarshal(tokenData, &tokenElements)
+	if decodeErr != nil {
+		return tokenElements, decodeErr
+	}
+
+	// Transform UNIX timestamps into time.Time objects.
+	tokenElements.IssuedAt = time.Unix(tokenElements.IsuedAtUnixfmt, 0)
+	tokenElements.NotBefore = time.Unix(tokenElements.NotBeforeUnixfmt, 0)
+	tokenElements.ExpiresAt = time.Unix(tokenElements.ExpiresAtUnixfmt, 0)
+
+	return tokenElements, nil
 }
 
 // retrieveAPIResult sends the given query to XMC and returns the raw JSON result, an error code for os.Exit() and the actual error.
@@ -277,6 +319,12 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Could not retrieve OAuth token: %s\n", oAuthErr)
 			os.Exit(errHTTPOAuth)
 		}
+		tokenElements, decodeErr := decodeOAuthToken()
+		if decodeErr != nil {
+			fmt.Fprintf(os.Stderr, "Could not decode OAuth token: %s\n", decodeErr)
+			os.Exit(errHTTPOAuth)
+		}
+		OAuth.TokenElements = tokenElements
 		Config.UseOAuth = true
 	}
 
