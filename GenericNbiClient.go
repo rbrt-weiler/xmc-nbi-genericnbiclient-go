@@ -44,6 +44,7 @@ type AppConfig struct {
 	XMCHost         string
 	XMCPort         uint
 	HTTPTimeout     uint
+	NoHTTPS         bool
 	InsecureHTTPS   bool
 	XMCClientID     string
 	XMCClientSecret string
@@ -79,7 +80,7 @@ type OAuth2TokenElements struct {
 // Definitions used within the code.
 const (
 	toolName      string = "XMC NBI GenericNbiClient.go"
-	toolVersion   string = "0.6.6"
+	toolVersion   string = "0.7.0"
 	httpUserAgent string = toolName + "/" + toolVersion
 	jsonMimeType  string = "application/json"
 )
@@ -135,7 +136,11 @@ func getEnvOrDefaultBool(name string, defaultVal bool) bool {
 
 // retrieveOAuthToken retrieves a usable OAuth token from XMC.
 func retrieveOAuthToken() (string, int, error) {
-	tokenURL := "https://" + Config.XMCHost + ":" + fmt.Sprint(Config.XMCPort) + "/oauth/token/access-token?grant_type=client_credentials"
+	scheme := "https"
+	if Config.NoHTTPS {
+		scheme = "http"
+	}
+	tokenURL := scheme + "://" + Config.XMCHost + ":" + fmt.Sprint(Config.XMCPort) + "/oauth/token/access-token?grant_type=client_credentials"
 
 	// Generate an actual HTTP request.
 	req, reqErr := http.NewRequest(http.MethodPost, tokenURL, nil)
@@ -204,7 +209,11 @@ func decodeOAuthToken() (OAuth2TokenElements, error) {
 
 // retrieveAPIResult sends the given query to XMC and returns the raw JSON result, an error code for os.Exit() and the actual error.
 func retrieveAPIResult(query string) (string, int, error) {
-	apiURL := "https://" + Config.XMCHost + ":" + fmt.Sprint(Config.XMCPort) + "/nbi/graphql"
+	scheme := "https"
+	if Config.NoHTTPS {
+		scheme = "http"
+	}
+	apiURL := scheme + "://" + Config.XMCHost + ":" + fmt.Sprint(Config.XMCPort) + "/nbi/graphql"
 
 	// Generate an actual HTTP request.
 	jsonQuery, jsonQueryErr := json.Marshal(map[string]string{"query": query})
@@ -220,7 +229,7 @@ func retrieveAPIResult(query string) (string, int, error) {
 	req.Header.Set("Content-Type", jsonMimeType)
 	req.Header.Set("Accept", jsonMimeType)
 	if Config.UseOAuth {
-		req.Header.Set("Authorization", "Bearer "+OAuth.AccessToken)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", OAuth.AccessToken))
 	} else {
 		req.SetBasicAuth(Config.XMCUsername, Config.XMCPassword)
 	}
@@ -254,6 +263,7 @@ func parseCLIOptions() {
 	flag.StringVar(&Config.XMCHost, "host", getEnvOrDefaultString("XMCHOST", ""), "XMC Hostname / IP")
 	flag.UintVar(&Config.XMCPort, "port", getEnvOrDefaultUint("XMCPORT", 8443), "HTTP port where XMC is listening")
 	flag.UintVar(&Config.HTTPTimeout, "httptimeout", getEnvOrDefaultUint("XMCTIMEOUT", 5), "Timeout for HTTP(S) connections")
+	flag.BoolVar(&Config.NoHTTPS, "nohttps", getEnvOrDefaultBool("XMCNOHTTPS", false), "Use HTTP instead of HTTPS")
 	flag.BoolVar(&Config.InsecureHTTPS, "insecurehttps", getEnvOrDefaultBool("XMCINSECURE", false), "Do not validate HTTPS certificates")
 	flag.StringVar(&Config.XMCClientID, "clientid", getEnvOrDefaultString("XMCCLIENTID", ""), "Client ID for OAuth2")
 	flag.StringVar(&Config.XMCClientSecret, "clientsecret", getEnvOrDefaultString("XMCCLIENTSECRET", ""), "Client Secret for OAuth2")
@@ -274,6 +284,7 @@ func parseCLIOptions() {
 		fmt.Fprintf(os.Stderr, "All options that take a value can be set via environment variables:\n")
 		fmt.Fprintf(os.Stderr, "  XMCHOST          -->  -host\n")
 		fmt.Fprintf(os.Stderr, "  XMCPORT          -->  -port\n")
+		fmt.Fprintf(os.Stderr, "  XMCNOHTTPS       -->  -nohttps\n")
 		fmt.Fprintf(os.Stderr, "  XMCINSECURE      -->  -insecurehttps\n")
 		fmt.Fprintf(os.Stderr, "  XMCTIMEOUT       -->  -httptimeout\n")
 		fmt.Fprintf(os.Stderr, "  XMCCLIENTID      -->  -clientid\n")
