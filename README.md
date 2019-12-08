@@ -60,7 +60,7 @@ All options that take a value can be set via environment variables:
 
 ## Authentication
 
-GenricNbiClient supports two methods of authentication: HTTP Basic Auth and OAuth2.
+GenericNbiClient supports two methods of authentication: HTTP Basic Auth and OAuth2.
 
   * HTTP Basic Auth: To use HTTP Basic Auth, provide the parameters `username` and `password`. GenericNbiClient will transmit the supplied credentials with each API request as part of the HTTP request header.
   * OAuth2: To use OAuth2, provide the parameters `clientid` and `clientsecret`. GenericNbiClient will attempt to obtain a OAuth2 token from XMC with the supplied credentials and, if successful, submit only that token with each API request as part of the HTTP header.
