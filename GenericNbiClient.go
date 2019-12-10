@@ -81,7 +81,7 @@ type OAuth2TokenElements struct {
 // Definitions used within the code.
 const (
 	toolName      string = "XMC NBI GenericNbiClient.go"
-	toolVersion   string = "0.7.1"
+	toolVersion   string = "0.7.2"
 	httpUserAgent string = toolName + "/" + toolVersion
 	jsonMimeType  string = "application/json"
 )
@@ -136,13 +136,15 @@ func getEnvOrDefaultBool(name string, defaultVal bool) bool {
 }
 
 // retrieveOAuthToken retrieves a usable OAuth token from XMC.
-func retrieveOAuthToken() (string, int, error) {
+func retrieveOAuthToken() (OAuth2Token, error) {
+	var tokenData OAuth2Token
+
 	tokenURL := Config.accessScheme + "://" + Config.XMCHost + ":" + fmt.Sprint(Config.XMCPort) + "/oauth/token/access-token?grant_type=client_credentials"
 
 	// Generate an actual HTTP request.
 	req, reqErr := http.NewRequest(http.MethodPost, tokenURL, nil)
 	if reqErr != nil {
-		return "", errHTTPRequest, fmt.Errorf("Could not create HTTPS request: %s", reqErr)
+		return tokenData, fmt.Errorf("Could not create HTTPS request: %s", reqErr)
 	}
 	req.Header.Set("User-Agent", httpUserAgent)
 	req.Header.Set("Cache-Control", "no-cache")
@@ -153,38 +155,38 @@ func retrieveOAuthToken() (string, int, error) {
 	// Try to get a result from the API.
 	res, resErr := NBIClient.Do(req)
 	if resErr != nil {
-		return "", errXMCConnect, fmt.Errorf("Could not connect to XMC: %s", resErr)
+		return tokenData, fmt.Errorf("Could not connect to XMC: %s", resErr)
 	}
 	if res.StatusCode != 200 {
-		return "", errXMCConnect, fmt.Errorf("Got status code %d instead of 200", res.StatusCode)
+		return tokenData, fmt.Errorf("Got status code %d instead of 200", res.StatusCode)
 	}
 	defer res.Body.Close()
 
 	// Check if the HTTP response has yielded the expected content type.
 	resContentType := res.Header.Get("Content-Type")
 	if strings.Index(resContentType, jsonMimeType) != 0 {
-		return "", errHTTPResponse, fmt.Errorf("Content-Type %s returned instead of %s", resContentType, jsonMimeType)
+		return tokenData, fmt.Errorf("Content-Type %s returned instead of %s", resContentType, jsonMimeType)
 	}
 
 	// Read and parse the body of the HTTP response.
 	xmcToken, readErr := ioutil.ReadAll(res.Body)
 	if readErr != nil {
-		return "", errHTTPResponse, fmt.Errorf("Could not read server response: %s", readErr)
+		return tokenData, fmt.Errorf("Could not read server response: %s", readErr)
 	}
-	jsonErr := json.Unmarshal(xmcToken, &OAuth)
+	jsonErr := json.Unmarshal(xmcToken, &tokenData)
 	if jsonErr != nil {
-		return "", errHTTPResponse, fmt.Errorf("Could not read server response: %s", jsonErr)
+		return tokenData, fmt.Errorf("Could not read server response: %s", jsonErr)
 	}
 
-	return OAuth.AccessToken, errSuccess, nil
+	return tokenData, nil
 }
 
-// decodeOAuthToken decodes certain parts of the OAuth token.
-func decodeOAuthToken() (OAuth2TokenElements, error) {
+// decodeOAuthToken decodes certain parts of an OAuth token.
+func decodeOAuthToken(accessToken string) (OAuth2TokenElements, error) {
 	var tokenElements OAuth2TokenElements
 
 	// Seperate and base64 decode the relevant part of the token.
-	tokenParts := strings.Split(OAuth.AccessToken, ".")
+	tokenParts := strings.Split(accessToken, ".")
 	tokenData, tokenErr := base64.StdEncoding.DecodeString(fmt.Sprintf("%s==", tokenParts[1]))
 	if tokenErr != nil {
 		return tokenElements, tokenErr
@@ -326,12 +328,13 @@ func main() {
 	// Try to get an OAuth token if we have OAuth authentication data.
 	Config.UseOAuth = false
 	if Config.XMCClientID != "" && Config.XMCClientSecret != "" {
-		_, _, oAuthErr := retrieveOAuthToken()
+		tokenData, oAuthErr := retrieveOAuthToken()
 		if oAuthErr != nil {
 			fmt.Fprintf(os.Stderr, "Could not retrieve OAuth token: %s\n", oAuthErr)
 			os.Exit(errHTTPOAuth)
 		}
-		tokenElements, decodeErr := decodeOAuthToken()
+		OAuth = tokenData
+		tokenElements, decodeErr := decodeOAuthToken(OAuth.AccessToken)
 		if decodeErr != nil {
 			fmt.Fprintf(os.Stderr, "Could not decode OAuth token: %s\n", decodeErr)
 			os.Exit(errHTTPOAuth)
