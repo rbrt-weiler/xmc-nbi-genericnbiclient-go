@@ -1,29 +1,109 @@
 image: golang:1.13
 
+
+
 stages:
   - build
+  - test
+  - deploy
 
-build-win64-executable:
+before_script:
+  - mkdir -p binaries
+
+after_script:
+  - ls -l binaries
+
+
+
+.build_command: &build_command
+- go build -o binaries/GenericNbiClient GenericNbiClient.go
+
+.build_command_release: &build_command_release
+- GOOS=linux GOARCH=amd64 go build -o binaries/GenericNbiClient_${CI_COMMIT_TAG}_${CI_COMMIT_SHORT_SHA}_linux64 GenericNbiClient.go
+- GOOS=windows GOARCH=amd64 go build -o binaries/GenericNbiClient_${CI_COMMIT_TAG}_${CI_COMMIT_SHORT_SHA}_win64.exe GenericNbiClient.go
+- GOOS=darwin GOARCH=amd64 go build -o binaries/GenericNbiClient_${CI_COMMIT_TAG}_${CI_COMMIT_SHORT_SHA}_darwin64 GenericNbiClient.go
+
+.test_command: &test_command
+- ./binaries/GenericNbiClient -version
+
+.release_command: &release_command
+- rm binaries/GenericNbiClient
+- ln -s binaries GenericNbiClient_${CI_COMMIT_TAG}
+
+
+
+build-qa:
+  stage: build
+  except:
+    - stable
+    - tags
+  script:
+    - *build_command
+  allow_failure: true
+
+
+
+build-staging:
   stage: build
   only:
     - stable
+  except:
+    - tags
+  cache:
+    key: "staging-$CI_COMMIT_SHA"
+    paths:
+      - binaries
   script:
-    - mkdir binaries
-    - GOOS=windows GOARCH=amd64 go build -o binaries/GenericNbiClient_$GOOS_$GOARCH.exe GenericNbiClient.go
+    - *build_command
 
-build-linux64-executable:
-  stage: build
+test-staging:
+  stage: test
   only:
     - stable
+  except:
+    - tags
+  cache:
+    key: "staging-$CI_COMMIT_SHA"
+    paths:
+      - binaries
   script:
-    - mkdir binaries
-    - GOOS=linux GOARCH=amd64 go build -o binaries/GenericNbiClient_$GOOS_$GOARCH GenericNbiClient.go
+    - *test_command
 
-build-darwin64-executable:
+
+
+build-release:
   stage: build
   only:
-    - stable
+    - tags
+  cache:
+    key: "release-$CI_COMMIT_SHA"
+    paths:
+      - binaries
   script:
-    - mkdir binaries
-    - GOOS=darwin GOARCH=amd64 go build -o binaries/GenericNbiClient_$GOOS_$GOARCH GenericNbiClient.go
+    - *build_command
+    - *build_command_release
 
+test-release:
+  stage: test
+  only:
+    - tags
+  cache:
+    key: "release-$CI_COMMIT_SHA"
+    paths:
+      - binaries
+  script:
+    - *test_command
+
+deploy-release:
+  stage: deploy
+  only:
+    - tags
+  cache:
+    key: "release-$CI_COMMIT_SHA"
+    paths:
+      - binaries
+  script:
+    - *release_command
+  artifacts:
+    paths:
+      - GenericNbiClient_${CI_COMMIT_TAG}/*
