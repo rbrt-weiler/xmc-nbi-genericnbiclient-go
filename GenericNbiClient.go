@@ -81,7 +81,7 @@ type OAuth2TokenElements struct {
 // Definitions used within the code.
 const (
 	toolName      string = "XMC NBI GenericNbiClient.go"
-	toolVersion   string = "0.7.2"
+	toolVersion   string = "0.7.3"
 	httpUserAgent string = toolName + "/" + toolVersion
 	jsonMimeType  string = "application/json"
 )
@@ -187,7 +187,15 @@ func decodeOAuthToken(accessToken string) (OAuth2TokenElements, error) {
 
 	// Seperate and base64 decode the relevant part of the token.
 	tokenParts := strings.Split(accessToken, ".")
-	tokenData, tokenErr := base64.StdEncoding.DecodeString(fmt.Sprintf("%s==", tokenParts[1]))
+	padding := ""
+	switch len(tokenParts[1]) % 4 {
+	case 2:
+		padding = "=="
+	case 3:
+		padding = "="
+	}
+	fmt.Printf("b64: %s\npad: %s\n", tokenParts[1], padding)
+	tokenData, tokenErr := base64.StdEncoding.DecodeString(fmt.Sprintf("%s%s", tokenParts[1], padding))
 	if tokenErr != nil {
 		return tokenElements, tokenErr
 	}
