@@ -194,7 +194,6 @@ func decodeOAuthToken(accessToken string) (OAuth2TokenElements, error) {
 	case 3:
 		padding = "="
 	}
-	fmt.Printf("b64: %s\npad: %s\n", tokenParts[1], padding)
 	tokenData, tokenErr := base64.StdEncoding.DecodeString(fmt.Sprintf("%s%s", tokenParts[1], padding))
 	if tokenErr != nil {
 		return tokenElements, tokenErr
