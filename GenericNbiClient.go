@@ -65,6 +65,18 @@ type OAuth2Token struct {
 
 // OAuth2TokenElements stores decoded information contained in a valid OAuth2 token.
 type OAuth2TokenElements struct {
+	Header    OAuth2HeaderElements
+	Payload   OAuth2PayloadElements
+	Signature []byte
+}
+
+// OAuth2HeaderElements stores decoded information contained in the header part of an OAuth2 token.
+type OAuth2HeaderElements struct {
+	Algorithm string `json:"alg"`
+}
+
+// OAuth2PayloadElements stores decoded information contained in the payload part of an OAuth2 token.
+type OAuth2PayloadElements struct {
 	Issuer           string    `json:"iss,omitempty"`
 	Subject          string    `json:"sub,omitempty"`
 	JWTID            string    `json:"jti,omitempty"`
@@ -81,7 +93,7 @@ type OAuth2TokenElements struct {
 // Definitions used within the code.
 const (
 	toolName      string = "XMC NBI GenericNbiClient.go"
-	toolVersion   string = "0.7.3"
+	toolVersion   string = "0.8.0"
 	httpUserAgent string = toolName + "/" + toolVersion
 	jsonMimeType  string = "application/json"
 )
@@ -181,36 +193,74 @@ func retrieveOAuthToken() (OAuth2Token, error) {
 	return tokenData, nil
 }
 
-// decodeOAuthToken decodes certain parts of an OAuth token.
+// decodeOAuthToken decodes the JSON Web Token used for OAuth.
 func decodeOAuthToken(accessToken string) (OAuth2TokenElements, error) {
 	var tokenElements OAuth2TokenElements
 
-	// Seperate and base64 decode the relevant part of the token.
+	// Seperate the parts of the token.
 	tokenParts := strings.Split(accessToken, ".")
-	padding := ""
-	switch len(tokenParts[1]) % 4 {
-	case 2:
-		padding = "=="
-	case 3:
-		padding = "="
+
+	// Decode each part.
+	header, headerErr := decodeOAuthHeader(tokenParts[0])
+	if headerErr != nil {
+		return tokenElements, headerErr
 	}
-	tokenData, tokenErr := base64.StdEncoding.DecodeString(fmt.Sprintf("%s%s", tokenParts[1], padding))
-	if tokenErr != nil {
-		return tokenElements, tokenErr
+	tokenElements.Header = header
+	payload, payloadErr := decodeOAuthPayload(tokenParts[1])
+	if payloadErr != nil {
+		return tokenElements, payloadErr
+	}
+	tokenElements.Payload = payload
+	signature, signatureErr := base64.RawURLEncoding.DecodeString(tokenParts[2])
+	if signatureErr != nil {
+		return tokenElements, signatureErr
+	}
+	tokenElements.Signature = signature
+
+	return tokenElements, nil
+}
+
+// decodeOAuthPayload decodes the header part of the JSON Web Token used for OAuth
+func decodeOAuthHeader(header64 string) (OAuth2HeaderElements, error) {
+	var headerElements OAuth2HeaderElements
+
+	// Decode the base64url encoded JSON.
+	headerData, headerErr := base64.RawURLEncoding.DecodeString(header64)
+	if headerErr != nil {
+		return headerElements, headerErr
 	}
 
 	// Parse the JSON into our struct.
-	decodeErr := json.Unmarshal(tokenData, &tokenElements)
+	decodeErr := json.Unmarshal(headerData, &headerElements)
 	if decodeErr != nil {
-		return tokenElements, decodeErr
+		return headerElements, decodeErr
+	}
+
+	return headerElements, nil
+}
+
+// decodeOAuthPayload decodes the payload part of the JSON Web Token used for OAuth
+func decodeOAuthPayload(payload64 string) (OAuth2PayloadElements, error) {
+	var payloadElements OAuth2PayloadElements
+
+	// Decode the base64url encoded JSON.
+	payloadData, payloadErr := base64.RawURLEncoding.DecodeString(payload64)
+	if payloadErr != nil {
+		return payloadElements, payloadErr
+	}
+
+	// Parse the JSON into our struct.
+	decodeErr := json.Unmarshal(payloadData, &payloadElements)
+	if decodeErr != nil {
+		return payloadElements, decodeErr
 	}
 
 	// Transform UNIX timestamps into time.Time objects.
-	tokenElements.IssuedAt = time.Unix(tokenElements.IsuedAtUnixfmt, 0)
-	tokenElements.NotBefore = time.Unix(tokenElements.NotBeforeUnixfmt, 0)
-	tokenElements.ExpiresAt = time.Unix(tokenElements.ExpiresAtUnixfmt, 0)
+	payloadElements.IssuedAt = time.Unix(payloadElements.IsuedAtUnixfmt, 0)
+	payloadElements.NotBefore = time.Unix(payloadElements.NotBeforeUnixfmt, 0)
+	payloadElements.ExpiresAt = time.Unix(payloadElements.ExpiresAtUnixfmt, 0)
 
-	return tokenElements, nil
+	return payloadElements, nil
 }
 
 // retrieveAPIResult sends the given query to XMC and returns the raw JSON result, an error code for os.Exit() and the actual error.
