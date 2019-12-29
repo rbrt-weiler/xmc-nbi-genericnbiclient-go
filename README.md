@@ -13,7 +13,7 @@ Other branches, for example for developing specific features, may be created and
 
 ## Compiling
 
-Use `go run GenericNbiClient.go` to run the tool directly or `go build GenericNbiClient.go` to compile a binary.
+Use `go run GenericNbiClient.go` to run the tool directly or `go build GenericNbiClient.go` to compile a binary. Prebuilt binaries may be available as artifacts from [the GitLab CI/CD pipeline](https://gitlab.com/rbrt-weiler/xmc-nbi-genericnbiclient-go/pipelines) for tagged releases.
 
 Tested with go1.13.
 
