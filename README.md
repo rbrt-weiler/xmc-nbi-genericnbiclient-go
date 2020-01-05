@@ -1,6 +1,6 @@
 # XMC NBI GenericNbiClient (Go)
 
-GenericNbiClient sends a query to the GraphQL-based API provided by the Northbound Interface (NBI) of [Extreme Management Center (XMC)](https://www.extremenetworks.com/product/extreme-management-center/) and prints the raw JSON response to stdout.
+GenericNbiClient sends a query to the GraphQL-based API provided by the Northbound Interface (NBI) of [Extreme Management Center](https://www.extremenetworks.com/product/extreme-management-center/) (XMC; formerly known as NetSight) and prints the raw JSON response to stdout.
 
 ## Branches
 
@@ -15,7 +15,7 @@ Other branches, for example for developing specific features, may be created and
 
 Use `go run GenericNbiClient.go` to run the tool directly or `go build GenericNbiClient.go` to compile a binary. Prebuilt binaries may be available as artifacts from [the GitLab CI/CD pipeline](https://gitlab.com/rbrt-weiler/xmc-nbi-genericnbiclient-go/pipelines) for tagged releases.
 
-Tested with go1.13.
+Tested with [go1.13](https://golang.org/doc/go1.13).
 
 ## Usage
 
@@ -68,7 +68,7 @@ GenericNbiClient supports two methods of authentication: HTTP Basic Auth and OAu
   * HTTP Basic Auth: To use HTTP Basic Auth, provide the parameters `username` and `password`. GenericNbiClient will transmit the supplied credentials with each API request as part of the HTTP request header.
   * OAuth2: To use OAuth2, provide the parameters `clientid` and `clientsecret`. GenericNbiClient will attempt to obtain a OAuth2 token from XMC with the supplied credentials and, if successful, submit only that token with each API request as part of the HTTP header.
 
-As all interactions between GenericNbiClient and XMC are secured with HTTPS by default both methods should be safe for transmission over networks. It is strongly recommended to use OAuth2 though. Should the crendetials ever be compromised, for example when using them on the CLI on a shared workstation, remediation will be much easier with OAuth2. When using unencrypted HTTP transfer (`nohttps`), Basic Auth should never be used.
+As all interactions between GenericNbiClient and XMC are secured with HTTPS by default both methods should be safe for transmission over networks. It is strongly recommended to use OAuth2 though. Should the credentials ever be compromised, for example when using them on the CLI on a shared workstation, remediation will be much easier with OAuth2. When using unencrypted HTTP transfer (`nohttps`), Basic Auth should never be used.
 
 In order to use OAuth2 you will need to create a Client API Access client. To create such a client, visit the _Administration_ -> _Client API Access_ tab within XMC and click on _Add_. Make sure to note the returned credentials, as they will never be shown again.
 
