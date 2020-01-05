@@ -404,9 +404,8 @@ func main() {
 	apiResult, exitCode, apiError := retrieveAPIResult(Config.XMCQuery)
 	if apiError != nil {
 		fmt.Fprintf(os.Stderr, "Could not retrieve API result: %s\n", apiError)
-	} else {
-		fmt.Println(string(apiResult))
 	}
+	fmt.Println(string(apiResult))
 
 	// Exit with an appropriate exit code.
 	os.Exit(exitCode)
