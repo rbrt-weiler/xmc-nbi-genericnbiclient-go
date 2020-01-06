@@ -13,10 +13,11 @@ before_script:
 after_script:
   - ls -l binaries
 
+# do not forget to set project variables
 include:
-  template: SAST.gitlab-ci.yml
+  - template: SAST.gitlab-ci.yml # GITLAB_FEATURES = "sast"
+  - template: License-Management.gitlab-ci.yml # GITLAB_FEATURES = "license_management"
 
-# do not forget to set project variable GITLAB_FEATURES = "sast"
 variables:
   SAST_DISABLE_DIND: "true"
   SAST_GOSEC_LEVEL: 0
