@@ -13,6 +13,14 @@ before_script:
 after_script:
   - ls -l binaries
 
+include:
+  template: SAST.gitlab-ci.yml
+
+# do not forget to set project variable GITLAB_FEATURES = "sast"
+variables:
+  SAST_DISABLE_DIND: "true"
+  SAST_GOSEC_LEVEL: 0
+
 
 
 .build_command: &build_command
@@ -37,8 +45,25 @@ build-dev:
   except:
     - stable
     - tags
+  cache:
+    key: "dev-$CI_COMMIT_SHA"
+    paths:
+      - binaries
   script:
     - *build_command
+  allow_failure: true
+
+test-dev:
+  stage: test
+  except:
+    - stable
+    - tags
+  cache:
+    key: "dev-$CI_COMMIT_SHA"
+    paths:
+      - binaries
+  script:
+    - *test_command
   allow_failure: true
 
 
