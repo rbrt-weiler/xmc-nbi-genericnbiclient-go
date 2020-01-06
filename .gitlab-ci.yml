@@ -13,6 +13,14 @@ before_script:
 after_script:
   - ls -l binaries
 
+include:
+  template: SAST.gitlab-ci.yml
+
+# do not forget to set project variable GITLAB_FEATURES = "sast"
+variables:
+  SAST_DISABLE_DIND: "true"
+  SAST_GOSEC_LEVEL: 0
+
 
 
 .build_command: &build_command
@@ -32,18 +40,35 @@ after_script:
 
 
 
-build-qa:
+build-dev:
   stage: build
   except:
     - stable
     - tags
+  cache:
+    key: "dev-$CI_COMMIT_SHA"
+    paths:
+      - binaries
   script:
     - *build_command
   allow_failure: true
 
+test-dev:
+  stage: test
+  except:
+    - stable
+    - tags
+  cache:
+    key: "dev-$CI_COMMIT_SHA"
+    paths:
+      - binaries
+  script:
+    - *test_command
+  allow_failure: true
 
 
-build-staging:
+
+build-stable:
   stage: build
   only:
     - stable
@@ -56,7 +81,7 @@ build-staging:
   script:
     - *build_command
 
-test-staging:
+test-stable:
   stage: test
   only:
     - stable
@@ -68,10 +93,16 @@ test-staging:
       - binaries
   script:
     - *test_command
+  artifacts:
+    when: on_success
+    expire_in: 30 minutes
+    name: "GenericNbiClient_${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - binaries/*
 
 
 
-build-release:
+build-tagged:
   stage: build
   only:
     - tags
@@ -83,7 +114,7 @@ build-release:
     - *build_command
     - *build_command_release
 
-test-release:
+test-tagged:
   stage: test
   only:
     - tags
@@ -94,7 +125,7 @@ test-release:
   script:
     - *test_command
 
-deploy-release:
+deploy-tagged:
   stage: deploy
   only:
     - tags
@@ -105,5 +136,7 @@ deploy-release:
   script:
     - *release_command
   artifacts:
+    when: on_success
+    name: "GenericNbiClient_${CI_COMMIT_TAG}"
     paths:
       - GenericNbiClient_${CI_COMMIT_TAG}/*
