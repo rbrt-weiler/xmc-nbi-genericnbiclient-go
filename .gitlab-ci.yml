@@ -32,7 +32,7 @@ after_script:
 
 
 
-build-qa:
+build-dev:
   stage: build
   except:
     - stable
@@ -43,7 +43,7 @@ build-qa:
 
 
 
-build-staging:
+build-stable:
   stage: build
   only:
     - stable
@@ -56,7 +56,7 @@ build-staging:
   script:
     - *build_command
 
-test-staging:
+test-stable:
   stage: test
   only:
     - stable
@@ -77,7 +77,7 @@ test-staging:
 
 
 
-build-release:
+build-tagged:
   stage: build
   only:
     - tags
@@ -89,7 +89,7 @@ build-release:
     - *build_command
     - *build_command_release
 
-test-release:
+test-tagged:
   stage: test
   only:
     - tags
@@ -100,7 +100,7 @@ test-release:
   script:
     - *test_command
 
-deploy-release:
+deploy-tagged:
   stage: deploy
   only:
     - tags
