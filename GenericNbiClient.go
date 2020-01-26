@@ -171,7 +171,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Could not retrieve API result: %s\n", apiError)
 		os.Exit(errAPIResult)
 	}
-	fmt.Println(string(apiResult))
+	fmt.Println(apiResult)
 
 	// Exit with an appropriate exit code.
 	os.Exit(errSuccess)
