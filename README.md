@@ -11,6 +11,10 @@ This project uses two defined branches:
 
 Other branches, for example for developing specific features, may be created and deleted at any time.
 
+## Dependencies
+
+GenericNbiClient uses the [module xmcnbiclient](https://gitlab.com/rbrt-weiler/go-module-xmcnbiclient). This module has to be installed with `go get gitlab.com/rbrt-weiler/go-module-xmcnbiclient` or updated with `go get -u gitlab.com/rbrt-weiler/go-module-xmcnbiclient` before running or compiling GenericNbiClient. All other dependencies are included in a standard Go installation.
+
 ## Compiling
 
 Use `go run GenericNbiClient.go` to run the tool directly or `go build GenericNbiClient.go` to compile a binary. Prebuilt binaries may be available as artifacts from the GitLab CI/CD [pipeline for tagged releases](https://gitlab.com/rbrt-weiler/xmc-nbi-genericnbiclient-go/pipelines?scope=tags).
@@ -24,33 +28,36 @@ Tested with [go1.13](https://golang.org/doc/go1.13).
 <pre>
 Available options:
   -clientid string
-        Client ID for OAuth2
+    	Client ID for OAuth2
   -clientsecret string
-        Client Secret for OAuth2
+    	Client Secret for OAuth2
   -host string
-        XMC Hostname / IP
+    	XMC Hostname / IP
   -httptimeout uint
-        Timeout for HTTP(S) connections (default 5)
+    	Timeout for HTTP(S) connections (default 5)
   -insecurehttps
-        Do not validate HTTPS certificates
+    	Do not validate HTTPS certificates
   -nohttps
-        Use HTTP instead of HTTPS
+    	Use HTTP instead of HTTPS
   -password string
-        Password for HTTP auth
+    	Password for HTTP auth
+  -path string
+    	Path where XMC is reachable
   -port uint
-        HTTP port where XMC is listening (default 8443)
+    	HTTP port where XMC is listening (default 8443)
   -query string
-        GraphQL query to send to XMC (default "query { network { devices { up ip sysName nickName } } }")
+    	GraphQL query to send to XMC (default "query { network { devices { up ip sysName nickName } } }")
   -username string
-        Username for HTTP auth (default "admin")
+    	Username for HTTP auth (default "admin")
   -version
-        Print version information and exit
+    	Print version information and exit
 
 OAuth2 will be preferred over username/password.
 
 All options that take a value can be set via environment variables:
   XMCHOST          -->  -host
   XMCPORT          -->  -port
+  XMCPATH          -->  -path
   XMCNOHTTPS       -->  -nohttps
   XMCINSECURE      -->  -insecurehttps
   XMCTIMEOUT       -->  -httptimeout
