@@ -13,10 +13,11 @@ before_script:
 after_script:
   - ls -l binaries
 
+# do not forget to set project variables
 include:
-  template: SAST.gitlab-ci.yml
+  - template: SAST.gitlab-ci.yml # GITLAB_FEATURES = "sast"
+  - template: License-Management.gitlab-ci.yml # GITLAB_FEATURES = "license_management"
 
-# do not forget to set project variable GITLAB_FEATURES = "sast"
 variables:
   SAST_DISABLE_DIND: "true"
   SAST_GOSEC_LEVEL: 0
@@ -24,9 +25,11 @@ variables:
 
 
 .build_command: &build_command
+- go get gitlab.com/rbrt-weiler/go-module-xmcnbiclient
 - go build -o binaries/GenericNbiClient GenericNbiClient.go
 
 .build_command_release: &build_command_release
+- go get gitlab.com/rbrt-weiler/go-module-xmcnbiclient
 - GOOS=linux GOARCH=amd64 go build -o binaries/GenericNbiClient_${CI_COMMIT_TAG}_${CI_COMMIT_SHORT_SHA}_linux64 GenericNbiClient.go
 - GOOS=windows GOARCH=amd64 go build -o binaries/GenericNbiClient_${CI_COMMIT_TAG}_${CI_COMMIT_SHORT_SHA}_win64.exe GenericNbiClient.go
 - GOOS=darwin GOARCH=amd64 go build -o binaries/GenericNbiClient_${CI_COMMIT_TAG}_${CI_COMMIT_SHORT_SHA}_darwin64 GenericNbiClient.go
