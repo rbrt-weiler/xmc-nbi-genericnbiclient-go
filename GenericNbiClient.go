@@ -14,6 +14,7 @@ import (
 type AppConfig struct {
 	XMCHost         string
 	XMCPort         uint
+	XMCPath         string
 	HTTPTimeout     uint
 	NoHTTPS         bool
 	InsecureHTTPS   bool
@@ -28,7 +29,7 @@ type AppConfig struct {
 // Definitions used within the code.
 const (
 	toolName      string = "XMC NBI GenericNbiClient.go"
-	toolVersion   string = "0.8.1"
+	toolVersion   string = "0.9.0"
 	versionString string = toolName + "/" + toolVersion
 )
 
@@ -82,6 +83,7 @@ func getEnvOrDefaultBool(name string, defaultVal bool) bool {
 func parseCLIOptions() {
 	flag.StringVar(&Config.XMCHost, "host", getEnvOrDefaultString("XMCHOST", ""), "XMC Hostname / IP")
 	flag.UintVar(&Config.XMCPort, "port", getEnvOrDefaultUint("XMCPORT", 8443), "HTTP port where XMC is listening")
+	flag.StringVar(&Config.XMCPath, "path", getEnvOrDefaultString("XMCPATH", ""), "Path where XMC is reachable")
 	flag.UintVar(&Config.HTTPTimeout, "httptimeout", getEnvOrDefaultUint("XMCTIMEOUT", 5), "Timeout for HTTP(S) connections")
 	flag.BoolVar(&Config.NoHTTPS, "nohttps", getEnvOrDefaultBool("XMCNOHTTPS", false), "Use HTTP instead of HTTPS")
 	flag.BoolVar(&Config.InsecureHTTPS, "insecurehttps", getEnvOrDefaultBool("XMCINSECURE", false), "Do not validate HTTPS certificates")
@@ -104,6 +106,7 @@ func parseCLIOptions() {
 		fmt.Fprintf(os.Stderr, "All options that take a value can be set via environment variables:\n")
 		fmt.Fprintf(os.Stderr, "  XMCHOST          -->  -host\n")
 		fmt.Fprintf(os.Stderr, "  XMCPORT          -->  -port\n")
+		fmt.Fprintf(os.Stderr, "  XMCPATH          -->  -path\n")
 		fmt.Fprintf(os.Stderr, "  XMCNOHTTPS       -->  -nohttps\n")
 		fmt.Fprintf(os.Stderr, "  XMCINSECURE      -->  -insecurehttps\n")
 		fmt.Fprintf(os.Stderr, "  XMCTIMEOUT       -->  -httptimeout\n")
@@ -153,6 +156,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Timeout could not be set: %s\n", timeoutErr)
 		os.Exit(errHTTPTimeout)
 	}
+	client.SetBasePath(Config.XMCPath)
 
 	// Try to get an OAuth token if we have OAuth authentication data.
 	if Config.XMCClientID != "" && Config.XMCClientSecret != "" {
