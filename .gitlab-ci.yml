@@ -25,9 +25,11 @@ variables:
 
 
 .build_command: &build_command
+- go get gitlab.com/rbrt-weiler/go-module-xmcnbiclient
 - go build -o binaries/GenericNbiClient GenericNbiClient.go
 
 .build_command_release: &build_command_release
+- go get gitlab.com/rbrt-weiler/go-module-xmcnbiclient
 - GOOS=linux GOARCH=amd64 go build -o binaries/GenericNbiClient_${CI_COMMIT_TAG}_${CI_COMMIT_SHORT_SHA}_linux64 GenericNbiClient.go
 - GOOS=windows GOARCH=amd64 go build -o binaries/GenericNbiClient_${CI_COMMIT_TAG}_${CI_COMMIT_SHORT_SHA}_win64.exe GenericNbiClient.go
 - GOOS=darwin GOARCH=amd64 go build -o binaries/GenericNbiClient_${CI_COMMIT_TAG}_${CI_COMMIT_SHORT_SHA}_darwin64 GenericNbiClient.go
