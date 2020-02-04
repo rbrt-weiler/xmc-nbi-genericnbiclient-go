@@ -6,8 +6,8 @@ GenericNbiClient sends a query to the GraphQL-based API provided by the Northbou
 
 This project uses two defined branches:
 
-  * `master` is the primary development branch. Code within `master` may be broken at any time.
-  * `stable` is reserved for code that compiles without errors and is tested. Track `stable` if you just want to use the software.
+* `master` is the primary development branch. Code within `master` may be broken at any time.
+* `stable` is reserved for code that compiles without errors and is tested. Track `stable` if you just want to use the software.
 
 Other branches, for example for developing specific features, may be created and deleted at any time.
 
@@ -27,53 +27,48 @@ Tested with [go1.13](https://golang.org/doc/go1.13).
 
 <pre>
 Available options:
-  -clientid string
-    	Client ID for OAuth2
-  -clientsecret string
-    	Client Secret for OAuth2
+  -basicauth
+        Use HTTP Basic Auth instead of OAuth
   -host string
-    	XMC Hostname / IP
-  -httptimeout uint
-    	Timeout for HTTP(S) connections (default 5)
+        XMC Hostname / IP
   -insecurehttps
-    	Do not validate HTTPS certificates
+        Do not validate HTTPS certificates
   -nohttps
-    	Use HTTP instead of HTTPS
-  -password string
-    	Password for HTTP auth
+        Use HTTP instead of HTTPS
   -path string
-    	Path where XMC is reachable
+        Path where XMC is reachable
   -port uint
-    	HTTP port where XMC is listening (default 8443)
+        HTTP port where XMC is listening (default 8443)
   -query string
-    	GraphQL query to send to XMC (default "query { network { devices { up ip sysName nickName } } }")
-  -username string
-    	Username for HTTP auth (default "admin")
+        GraphQL query to send to XMC (default "query { network { devices { up ip sysName nickName } } }")
+  -secret string
+        Client Secret (OAuth) or password (Basic Auth) for authentication
+  -timeout uint
+        Timeout for HTTP(S) connections (default 5)
+  -userid string
+        Client ID (OAuth) or username (Basic Auth) for authentication
   -version
-    	Print version information and exit
-
-OAuth2 will be preferred over username/password.
+        Print version information and exit
 
 All options that take a value can be set via environment variables:
-  XMCHOST          -->  -host
-  XMCPORT          -->  -port
-  XMCPATH          -->  -path
-  XMCNOHTTPS       -->  -nohttps
-  XMCINSECURE      -->  -insecurehttps
-  XMCTIMEOUT       -->  -httptimeout
-  XMCCLIENTID      -->  -clientid
-  XMCCLIENTSECRET  -->  -clientsecret
-  XMCUSERNAME      -->  -username
-  XMCPASSWORD      -->  -password
-  XMCQUERY         -->  -query
+  XMCHOST       -->  -host
+  XMCPORT       -->  -port
+  XMCPATH       -->  -path
+  XMCTIMEOUT    -->  -timeout
+  XMCNOHTTPS    -->  -nohttps
+  XMCINSECURE   -->  -insecurehttps
+  XMCUSERID     -->  -userid
+  XMCSECRET     -->  -secret
+  XMCBASICAUTH  -->  -basicauth
+  XMCQUERY      -->  -query
 </pre>
 
 ## Authentication
 
-GenericNbiClient supports two methods of authentication: HTTP Basic Auth and OAuth2.
+GenericNbiClient supports two methods of authentication: OAuth2 and HTTP Basic Auth.
 
-  * HTTP Basic Auth: To use HTTP Basic Auth, provide the parameters `username` and `password`. GenericNbiClient will transmit the supplied credentials with each API request as part of the HTTP request header.
-  * OAuth2: To use OAuth2, provide the parameters `clientid` and `clientsecret`. GenericNbiClient will attempt to obtain a OAuth2 token from XMC with the supplied credentials and, if successful, submit only that token with each API request as part of the HTTP header.
+* OAuth2: To use OAuth2, provide the parameters `userid` and `secret`. GenericNbiClient will attempt to obtain a OAuth2 token from XMC with the supplied credentials and, if successful, submit only that token with each API request as part of the HTTP header.
+* HTTP Basic Auth: To use HTTP Basic Auth, provide the parameters `userid` and `secret` as well as `basicauth`. GenericNbiClient will transmit the supplied credentials with each API request as part of the HTTP request header.
 
 As all interactions between GenericNbiClient and XMC are secured with HTTPS by default both methods should be safe for transmission over networks. It is strongly recommended to use OAuth2 though. Should the credentials ever be compromised, for example when using them on the CLI on a shared workstation, remediation will be much easier with OAuth2. When using unencrypted HTTP transfer (`nohttps`), Basic Auth should never be used.
 
