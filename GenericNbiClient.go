@@ -29,7 +29,7 @@ type appConfig struct {
 
 // Definitions used within the code.
 const (
-	toolName    string = "XMC NBI GenericNbiClient.go"
+	toolName    string = "GenericNbiClient.go"
 	toolVersion string = "0.11.0"
 	toolID      string = toolName + "/" + toolVersion
 )
