@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"strconv"
 
+	envordef "gitlab.com/rbrt-weiler/go-module-envordef"
 	xmcnbiclient "gitlab.com/rbrt-weiler/go-module-xmcnbiclient"
 )
 
@@ -28,7 +28,7 @@ type AppConfig struct {
 // Definitions used within the code.
 const (
 	toolName      string = "XMC NBI GenericNbiClient.go"
-	toolVersion   string = "0.10.0"
+	toolVersion   string = "0.10.1"
 	versionString string = toolName + "/" + toolVersion
 )
 
@@ -47,49 +47,18 @@ var (
 	Config AppConfig
 )
 
-// getEnvOrDefaultString returns the string value of the environment variable "name" or "defaultVal" if that variable does not exist.
-func getEnvOrDefaultString(name string, defaultVal string) string {
-	retVal := defaultVal
-	envVal, ok := os.LookupEnv(name)
-	if ok {
-		retVal = envVal
-	}
-	return retVal
-}
-
-// getEnvOrDefaultUint returns the uint value of the environment variable "name" or "defaultVal" if that variable does not exist.
-func getEnvOrDefaultUint(name string, defaultVal uint) uint {
-	retVal := defaultVal
-	envVal, ok := os.LookupEnv(name)
-	if ok {
-		intVal, _ := strconv.Atoi(envVal)
-		retVal = uint(intVal)
-	}
-	return retVal
-}
-
-// getEnvOrDefaultBool returns the bool value of the environment variable "name" or "defaultVal" if that variable does not exist.
-func getEnvOrDefaultBool(name string, defaultVal bool) bool {
-	retVal := defaultVal
-	envVal, ok := os.LookupEnv(name)
-	if ok {
-		retVal, _ = strconv.ParseBool(envVal)
-	}
-	return retVal
-}
-
 // parseCLIOptions parses all options passed by env or CLI into the Config variable.
 func parseCLIOptions() {
-	flag.StringVar(&Config.XMCHost, "host", getEnvOrDefaultString("XMCHOST", ""), "XMC Hostname / IP")
-	flag.UintVar(&Config.XMCPort, "port", getEnvOrDefaultUint("XMCPORT", 8443), "HTTP port where XMC is listening")
-	flag.StringVar(&Config.XMCPath, "path", getEnvOrDefaultString("XMCPATH", ""), "Path where XMC is reachable")
-	flag.UintVar(&Config.HTTPTimeout, "timeout", getEnvOrDefaultUint("XMCTIMEOUT", 5), "Timeout for HTTP(S) connections")
-	flag.BoolVar(&Config.NoHTTPS, "nohttps", getEnvOrDefaultBool("XMCNOHTTPS", false), "Use HTTP instead of HTTPS")
-	flag.BoolVar(&Config.InsecureHTTPS, "insecurehttps", getEnvOrDefaultBool("XMCINSECURE", false), "Do not validate HTTPS certificates")
-	flag.StringVar(&Config.XMCUserID, "userid", getEnvOrDefaultString("XMCUSERID", ""), "Client ID (OAuth) or username (Basic Auth) for authentication")
-	flag.StringVar(&Config.XMCSecret, "secret", getEnvOrDefaultString("XMCSECRET", ""), "Client Secret (OAuth) or password (Basic Auth) for authentication")
-	flag.BoolVar(&Config.BasicAuth, "basicauth", getEnvOrDefaultBool("XMCBASICAUTH", false), "Use HTTP Basic Auth instead of OAuth")
-	flag.StringVar(&Config.XMCQuery, "query", getEnvOrDefaultString("XMCQUERY", "query { network { devices { up ip sysName nickName } } }"), "GraphQL query to send to XMC")
+	flag.StringVar(&Config.XMCHost, "host", envordef.StringVal("XMCHOST", ""), "XMC Hostname / IP")
+	flag.UintVar(&Config.XMCPort, "port", envordef.UintVal("XMCPORT", 8443), "HTTP port where XMC is listening")
+	flag.StringVar(&Config.XMCPath, "path", envordef.StringVal("XMCPATH", ""), "Path where XMC is reachable")
+	flag.UintVar(&Config.HTTPTimeout, "timeout", envordef.UintVal("XMCTIMEOUT", 5), "Timeout for HTTP(S) connections")
+	flag.BoolVar(&Config.NoHTTPS, "nohttps", envordef.BoolVal("XMCNOHTTPS", false), "Use HTTP instead of HTTPS")
+	flag.BoolVar(&Config.InsecureHTTPS, "insecurehttps", envordef.BoolVal("XMCINSECURE", false), "Do not validate HTTPS certificates")
+	flag.StringVar(&Config.XMCUserID, "userid", envordef.StringVal("XMCUSERID", ""), "Client ID (OAuth) or username (Basic Auth) for authentication")
+	flag.StringVar(&Config.XMCSecret, "secret", envordef.StringVal("XMCSECRET", ""), "Client Secret (OAuth) or password (Basic Auth) for authentication")
+	flag.BoolVar(&Config.BasicAuth, "basicauth", envordef.BoolVal("XMCBASICAUTH", false), "Use HTTP Basic Auth instead of OAuth")
+	flag.StringVar(&Config.XMCQuery, "query", envordef.StringVal("XMCQUERY", "query { network { devices { up ip sysName nickName } } }"), "GraphQL query to send to XMC")
 	flag.BoolVar(&Config.PrintVersion, "version", false, "Print version information and exit")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "This tool queries the XMC API and prints the raw reply (JSON) to stdout.\n")
