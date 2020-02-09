@@ -25,6 +25,7 @@ variables:
 
 
 .build_command: &build_command
+- go get gitlab.com/rbrt-weiler/go-module-envordef
 - go get gitlab.com/rbrt-weiler/go-module-xmcnbiclient
 - go build -o binaries/GenericNbiClient GenericNbiClient.go
 
