@@ -13,7 +13,12 @@ Other branches, for example for developing specific features, may be created and
 
 ## Dependencies
 
-GenericNbiClient uses the [module xmcnbiclient](https://gitlab.com/rbrt-weiler/go-module-xmcnbiclient). This module has to be installed with `go get gitlab.com/rbrt-weiler/go-module-xmcnbiclient` or updated with `go get -u gitlab.com/rbrt-weiler/go-module-xmcnbiclient` before running or compiling GenericNbiClient. All other dependencies are included in a standard Go installation.
+GenericNbiClient uses the modules [envordef](https://gitlab.com/rbrt-weiler/go-module-envordef) and [xmcnbiclient](https://gitlab.com/rbrt-weiler/go-module-xmcnbiclient). Execute...
+
+1. `go get -u gitlab.com/rbrt-weiler/go-module-envordef`
+1. `go get -u gitlab.com/rbrt-weiler/go-module-xmcnbiclient`
+
+...before running or compiling GenericNbiClient. All other dependencies are included in a standard Go installation.
 
 ## Compiling
 
