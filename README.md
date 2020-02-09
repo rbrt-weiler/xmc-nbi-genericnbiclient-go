@@ -78,7 +78,7 @@ In order to use OAuth2 you will need to create a Client API Access client. To cr
 
 Any user or API client who wants to access the Northbound Interface needs the appropriate access rights. In general, checking the full _Northbound API_ section within rights management will suffice. Depending on the use case, it may be feasible to go into detail and restrict the rights to the bare minimum required.
 
-For regular users (HTTP Basic Auth) the rights are managed via _Authorization Groups_ found in the _Administration_ -> _Users_ tab within XMC. For API clients (OAuth2) the rights are defined when creating an API client and can later be adjusted in the same tab.
+For API clients (OAuth2) the rights are defined when creating an API client and can later be adjusted in the same tab. For regular users (HTTP Basic Auth) the rights are managed via _Authorization Groups_ found in the _Administration_ -> _Users_ tab within XMC.
 
 ## Source
 
