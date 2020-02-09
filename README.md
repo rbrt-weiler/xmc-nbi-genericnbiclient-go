@@ -13,8 +13,9 @@ Other branches, for example for developing specific features, may be created and
 
 ## Dependencies
 
-GenericNbiClient uses the modules [envordef](https://gitlab.com/rbrt-weiler/go-module-envordef) and [xmcnbiclient](https://gitlab.com/rbrt-weiler/go-module-xmcnbiclient). Execute...
+GenericNbiClient uses the modules [godotenv](https://github.com/joho/godotenv), [envordef](https://gitlab.com/rbrt-weiler/go-module-envordef) and [xmcnbiclient](https://gitlab.com/rbrt-weiler/go-module-xmcnbiclient). Execute...
 
+1. `go get -u github.com/joho/godotenv`
 1. `go get -u gitlab.com/rbrt-weiler/go-module-envordef`
 1. `go get -u gitlab.com/rbrt-weiler/go-module-xmcnbiclient`
 
@@ -33,27 +34,27 @@ Tested with [go1.13](https://golang.org/doc/go1.13).
 <pre>
 Available options:
   -basicauth
-        Use HTTP Basic Auth instead of OAuth
+    	Use HTTP Basic Auth instead of OAuth
   -host string
-        XMC Hostname / IP
+    	XMC Hostname / IP
   -insecurehttps
-        Do not validate HTTPS certificates
+    	Do not validate HTTPS certificates
   -nohttps
-        Use HTTP instead of HTTPS
+    	Use HTTP instead of HTTPS
   -path string
-        Path where XMC is reachable
+    	Path where XMC is reachable
   -port uint
-        HTTP port where XMC is listening (default 8443)
+    	HTTP port where XMC is listening (default 8443)
   -query string
-        GraphQL query to send to XMC (default "query { network { devices { up ip sysName nickName } } }")
+    	GraphQL query to send to XMC (default "query { network { devices { up ip sysName nickName } } }")
   -secret string
-        Client Secret (OAuth) or password (Basic Auth) for authentication
+    	Client Secret (OAuth) or password (Basic Auth) for authentication
   -timeout uint
-        Timeout for HTTP(S) connections (default 5)
+    	Timeout for HTTP(S) connections (default 5)
   -userid string
-        Client ID (OAuth) or username (Basic Auth) for authentication
+    	Client ID (OAuth) or username (Basic Auth) for authentication
   -version
-        Print version information and exit
+    	Print version information and exit
 
 All options that take a value can be set via environment variables:
   XMCHOST       -->  -host
@@ -66,6 +67,10 @@ All options that take a value can be set via environment variables:
   XMCSECRET     -->  -secret
   XMCBASICAUTH  -->  -basicauth
   XMCQUERY      -->  -query
+
+Environment variables can also be configured via a file called .xmcenv,
+located in the current directory or in the home directory of the current
+user.
 </pre>
 
 ## Authentication
