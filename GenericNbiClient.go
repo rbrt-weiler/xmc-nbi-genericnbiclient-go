@@ -13,7 +13,6 @@ import (
 
 // AppConfig stores the application configuration once parsed by flags.
 type appConfig struct {
-	EnvFile       string
 	XMCHost       string
 	XMCPort       uint
 	XMCPath       string
