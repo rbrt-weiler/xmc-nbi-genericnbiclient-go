@@ -82,7 +82,7 @@ func parseCLIOptions() {
 		fmt.Fprintf(os.Stderr, "  XMCBASICAUTH      -->  -basicauth\n")
 		fmt.Fprintf(os.Stderr, "  XMCQUERY          -->  -query\n")
 		fmt.Fprintf(os.Stderr, "\n")
-		fmt.Fprintf(os.Stderr, "Environment variables can also be configured via a file called .xmcenv,\n")
+		fmt.Fprintf(os.Stderr, "Environment variables can also be configured via a file called %s,\n", envFileName)
 		fmt.Fprintf(os.Stderr, "located in the current directory or in the home directory of the current\n")
 		fmt.Fprintf(os.Stderr, "user.\n")
 		os.Exit(errUsage)
