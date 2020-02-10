@@ -29,8 +29,9 @@ type appConfig struct {
 // Definitions used within the code.
 const (
 	toolName    string = "GenericNbiClient.go"
-	toolVersion string = "0.11.1"
+	toolVersion string = "0.12.0"
 	toolID      string = toolName + "/" + toolVersion
+	envFileName string = ".xmcenv"
 )
 
 // Error codes.
@@ -91,8 +92,7 @@ func parseCLIOptions() {
 
 // init loads environment files if available.
 func init() {
-	envFileName := ".xmcenv"
-
+	// if envFileName exists in the current directory, load it
 	localEnvFile := fmt.Sprintf("./%s", envFileName)
 	if _, localEnvErr := os.Stat(localEnvFile); localEnvErr == nil {
 		if loadErr := godotenv.Load(localEnvFile); loadErr != nil {
@@ -100,6 +100,7 @@ func init() {
 		}
 	}
 
+	// if envFileName exists in the user's home directory, load it
 	if homeDir, homeErr := os.UserHomeDir(); homeErr == nil {
 		homeEnvFile := fmt.Sprintf("%s/%s", homeDir, ".xmcenv")
 		if _, homeEnvErr := os.Stat(homeEnvFile); homeEnvErr == nil {
