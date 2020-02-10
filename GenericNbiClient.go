@@ -13,7 +13,6 @@ import (
 
 // AppConfig stores the application configuration once parsed by flags.
 type appConfig struct {
-	EnvFile       string
 	XMCHost       string
 	XMCPort       uint
 	XMCPath       string
@@ -29,8 +28,8 @@ type appConfig struct {
 
 // Definitions used within the code.
 const (
-	toolName    string = "XMC NBI GenericNbiClient.go"
-	toolVersion string = "0.11.0"
+	toolName    string = "GenericNbiClient.go"
+	toolVersion string = "0.11.1"
 	toolID      string = toolName + "/" + toolVersion
 )
 
@@ -97,7 +96,7 @@ func init() {
 	localEnvFile := fmt.Sprintf("./%s", envFileName)
 	if _, localEnvErr := os.Stat(localEnvFile); localEnvErr == nil {
 		if loadErr := godotenv.Load(localEnvFile); loadErr != nil {
-			fmt.Fprintf(os.Stderr, "Could not load <%s>: %s", localEnvFile, loadErr)
+			fmt.Fprintf(os.Stderr, "Could not load env file <%s>: %s", localEnvFile, loadErr)
 		}
 	}
 
@@ -105,7 +104,7 @@ func init() {
 		homeEnvFile := fmt.Sprintf("%s/%s", homeDir, ".xmcenv")
 		if _, homeEnvErr := os.Stat(homeEnvFile); homeEnvErr == nil {
 			if loadErr := godotenv.Load(homeEnvFile); loadErr != nil {
-				fmt.Fprintf(os.Stderr, "Could not load <%s>: %s", homeEnvFile, loadErr)
+				fmt.Fprintf(os.Stderr, "Could not load env file <%s>: %s", homeEnvFile, loadErr)
 			}
 		}
 	}
@@ -132,7 +131,7 @@ func main() {
 	client.SetUserAgent(toolID)
 	portErr := client.SetPort(config.XMCPort)
 	if portErr != nil {
-		fmt.Fprintf(os.Stderr, "Port could not be set: %s\n", portErr)
+		fmt.Fprintf(os.Stderr, "XMC port could not be set: %s\n", portErr)
 		os.Exit(errHTTPPort)
 	}
 	if config.NoHTTPS {
@@ -143,7 +142,7 @@ func main() {
 	}
 	timeoutErr := client.SetTimeout(config.HTTPTimeout)
 	if timeoutErr != nil {
-		fmt.Fprintf(os.Stderr, "Timeout could not be set: %s\n", timeoutErr)
+		fmt.Fprintf(os.Stderr, "HTTP timeout could not be set: %s\n", timeoutErr)
 		os.Exit(errHTTPTimeout)
 	}
 	client.SetBasePath(config.XMCPath)
