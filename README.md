@@ -57,16 +57,16 @@ Available options:
     	Print version information and exit
 
 All options that take a value can be set via environment variables:
-  XMCHOST       -->  -host
-  XMCPORT       -->  -port
-  XMCPATH       -->  -path
-  XMCTIMEOUT    -->  -timeout
-  XMCNOHTTPS    -->  -nohttps
-  XMCINSECURE   -->  -insecurehttps
-  XMCUSERID     -->  -userid
-  XMCSECRET     -->  -secret
-  XMCBASICAUTH  -->  -basicauth
-  XMCQUERY      -->  -query
+  XMCHOST           -->  -host
+  XMCPORT           -->  -port
+  XMCPATH           -->  -path
+  XMCTIMEOUT        -->  -timeout
+  XMCNOHTTPS        -->  -nohttps
+  XMCINSECUREHTTPS  -->  -insecurehttps
+  XMCUSERID         -->  -userid
+  XMCSECRET         -->  -secret
+  XMCBASICAUTH      -->  -basicauth
+  XMCQUERY          -->  -query
 
 Environment variables can also be configured via a file called .xmcenv,
 located in the current directory or in the home directory of the current
