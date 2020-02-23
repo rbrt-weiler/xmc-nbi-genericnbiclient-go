@@ -31,6 +31,7 @@ const (
 	toolName    string = "GenericNbiClient.go"
 	toolVersion string = "0.12.0"
 	toolID      string = toolName + "/" + toolVersion
+	toolURL     string = "https://gitlab.com/rbrt-weiler/xmc-nbi-genericnbiclient-go"
 	envFileName string = ".xmcenv"
 )
 
@@ -63,6 +64,9 @@ func parseCLIOptions() {
 	flag.StringVar(&config.XMCQuery, "query", envordef.StringVal("XMCQUERY", "query { network { devices { up ip sysName nickName } } }"), "GraphQL query to send to XMC")
 	flag.BoolVar(&config.PrintVersion, "version", false, "Print version information and exit")
 	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "%s\n", toolID)
+		fmt.Fprintf(os.Stderr, "%s\n", toolURL)
+		fmt.Fprintf(os.Stderr, "\n")
 		fmt.Fprintf(os.Stderr, "This tool queries the XMC API and prints the raw reply (JSON) to stdout.\n")
 		fmt.Fprintf(os.Stderr, "\n")
 		fmt.Fprintf(os.Stderr, "Usage: %s [options]\n", path.Base(os.Args[0]))
