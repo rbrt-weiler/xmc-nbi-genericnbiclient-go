@@ -21,7 +21,7 @@ GenericNbiClient uses the modules [godotenv](https://github.com/joho/godotenv), 
 
 ...before running or compiling GenericNbiClient. All other dependencies are included in a standard Go installation.
 
-## Compiling / Running
+## Running / Compiling
 
 Use `go run GenericNbiClient.go` to run the tool directly or `go build GenericNbiClient.go` to compile a binary. Prebuilt binaries may be available as artifacts from the GitLab CI/CD [pipeline for tagged releases](https://gitlab.com/rbrt-weiler/xmc-nbi-genericnbiclient-go/pipelines?scope=tags).
 
