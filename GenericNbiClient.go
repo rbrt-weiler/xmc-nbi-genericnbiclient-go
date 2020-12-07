@@ -14,15 +14,18 @@ import (
 	xmcnbiclient "gitlab.com/rbrt-weiler/go-module-xmcnbiclient"
 )
 
+// consoleHelper encapsulates functionality for pretty printing on the console.
 type consoleHelper struct {
 	Rows int
 	Cols int
 }
 
+// Updates the consoleHelper instance with the current console dimensions.
 func (c *consoleHelper) UpdateDimensions() {
 	c.Cols, c.Rows = consolesize.GetConsoleSize()
 }
 
+// Like fmt.Sprintf, but with text wrapping based on console size.
 func (c *consoleHelper) Sprintf(format string, a ...interface{}) string {
 	if c.Cols == 0 || c.Rows == 0 {
 		c.UpdateDimensions()
@@ -30,11 +33,12 @@ func (c *consoleHelper) Sprintf(format string, a ...interface{}) string {
 	return text.WrapSoft(fmt.Sprintf(format, a...), c.Cols)
 }
 
+// Like fmt.Sprint, but with text wrapping based on console size.
 func (c *consoleHelper) Sprint(s string) string {
 	return c.Sprintf("%s", s)
 }
 
-// AppConfig stores the application configuration once parsed by flags.
+// appConfig stores the application configuration once parsed by flags.
 type appConfig struct {
 	XMCHost       string
 	XMCPort       uint
@@ -69,10 +73,10 @@ const (
 	errHTTPTimeout int = 41 // Error setting the HTTP timeout
 )
 
-// Variables used to pass data between functions.
+// Global variables used throughout the program.
 var (
-	console consoleHelper
-	config  appConfig
+	config  appConfig     // User configuration
+	console consoleHelper // Pretty printing
 )
 
 // parseCLIOptions parses all options passed by env or CLI into the Config variable.
