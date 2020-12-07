@@ -52,6 +52,7 @@ var (
 
 // parseCLIOptions parses all options passed by env or CLI into the Config variable.
 func parseCLIOptions() {
+	pflag.CommandLine.SortFlags = false
 	pflag.StringVarP(&config.XMCHost, "host", "h", envordef.StringVal("XMCHOST", ""), "XMC Hostname / IP")
 	pflag.UintVar(&config.XMCPort, "port", envordef.UintVal("XMCPORT", 8443), "HTTP port where XMC is listening")
 	pflag.StringVar(&config.XMCPath, "path", envordef.StringVal("XMCPATH", ""), "Path where XMC is reachable")
