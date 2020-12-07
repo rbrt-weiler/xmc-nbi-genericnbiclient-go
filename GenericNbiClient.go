@@ -6,11 +6,18 @@ import (
 	"path"
 	"strings"
 
+	text "github.com/jedib0t/go-pretty/v6/text"
 	godotenv "github.com/joho/godotenv"
+	consolesize "github.com/nathan-fiscaletti/consolesize-go"
 	pflag "github.com/spf13/pflag"
 	envordef "gitlab.com/rbrt-weiler/go-module-envordef"
 	xmcnbiclient "gitlab.com/rbrt-weiler/go-module-xmcnbiclient"
 )
+
+type consoleInformation struct {
+	Rows int
+	Cols int
+}
 
 // AppConfig stores the application configuration once parsed by flags.
 type appConfig struct {
@@ -49,7 +56,8 @@ const (
 
 // Variables used to pass data between functions.
 var (
-	config appConfig
+	console consoleInformation
+	config  appConfig
 )
 
 // parseCLIOptions parses all options passed by env or CLI into the Config variable.
@@ -90,9 +98,7 @@ func parseCLIOptions() {
 		fmt.Fprintf(os.Stderr, "  XMCSECRET         -->  -secret\n")
 		fmt.Fprintf(os.Stderr, "  XMCBASICAUTH      -->  -basicauth\n")
 		fmt.Fprintf(os.Stderr, "\n")
-		fmt.Fprintf(os.Stderr, "Environment variables can also be configured via a file called %s,\n", envFileName)
-		fmt.Fprintf(os.Stderr, "located in the current directory or in the home directory of the current\n")
-		fmt.Fprintf(os.Stderr, "user.\n")
+		fmt.Fprintf(os.Stderr, "%s\n", text.WrapSoft(fmt.Sprintf("Environment variables can also be configured via a file called %s, located in the current directory or in the home directory of the current user.", envFileName), console.Cols))
 		os.Exit(errUsage)
 	}
 	pflag.Parse()
@@ -104,6 +110,9 @@ func parseCLIOptions() {
 
 // init loads environment files if available.
 func init() {
+	// get console size
+	console.Cols, console.Rows = consolesize.GetConsoleSize()
+
 	// if envFileName exists in the current directory, load it
 	localEnvFile := fmt.Sprintf("./%s", envFileName)
 	if _, localEnvErr := os.Stat(localEnvFile); localEnvErr == nil {
