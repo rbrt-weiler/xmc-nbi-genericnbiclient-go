@@ -166,8 +166,7 @@ func main() {
 	// Set up a NBI client
 	client := xmcnbiclient.New(config.XMCHost)
 	client.SetUserAgent(toolID)
-	portErr := client.SetPort(config.XMCPort)
-	if portErr != nil {
+	if portErr := client.SetPort(config.XMCPort); portErr != nil {
 		fmt.Fprintf(os.Stderr, "XMC port could not be set: %s\n", portErr)
 		os.Exit(errHTTPPort)
 	}
@@ -177,8 +176,7 @@ func main() {
 	if config.InsecureHTTPS {
 		client.UseInsecureHTTPS()
 	}
-	timeoutErr := client.SetTimeout(config.HTTPTimeout)
-	if timeoutErr != nil {
+	if timeoutErr := client.SetTimeout(config.HTTPTimeout); timeoutErr != nil {
 		fmt.Fprintf(os.Stderr, "HTTP timeout could not be set: %s\n", timeoutErr)
 		os.Exit(errHTTPTimeout)
 	}
