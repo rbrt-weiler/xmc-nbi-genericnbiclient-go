@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 
 	godotenv "github.com/joho/godotenv"
 	pflag "github.com/spf13/pflag"
@@ -28,11 +29,12 @@ type appConfig struct {
 
 // Definitions used within the code.
 const (
-	toolName    string = "GenericNbiClient.go"
-	toolVersion string = "0.13.0-dev"
-	toolID      string = toolName + "/" + toolVersion
-	toolURL     string = "https://gitlab.com/rbrt-weiler/xmc-nbi-genericnbiclient-go"
-	envFileName string = ".xmcenv"
+	toolName        string = "GenericNbiClient.go"
+	toolVersion     string = "0.13.0-dev"
+	toolID          string = toolName + "/" + toolVersion
+	toolURL         string = "https://gitlab.com/rbrt-weiler/xmc-nbi-genericnbiclient-go"
+	envFileName     string = ".xmcenv"
+	defaultXMCQuery string = "query { network { devices { up ip sysName nickName } } }"
 )
 
 // Error codes.
@@ -62,7 +64,6 @@ func parseCLIOptions() {
 	pflag.StringVarP(&config.XMCUserID, "userid", "u", envordef.StringVal("XMCUSERID", ""), "Client ID (OAuth) or username (Basic Auth) for authentication")
 	pflag.StringVarP(&config.XMCSecret, "secret", "s", envordef.StringVal("XMCSECRET", ""), "Client Secret (OAuth) or password (Basic Auth) for authentication")
 	pflag.BoolVar(&config.BasicAuth, "basicauth", envordef.BoolVal("XMCBASICAUTH", false), "Use HTTP Basic Auth instead of OAuth")
-	pflag.StringVarP(&config.XMCQuery, "query", "q", envordef.StringVal("XMCQUERY", "query { network { devices { up ip sysName nickName } } }"), "GraphQL query to send to XMC")
 	pflag.BoolVar(&config.PrintVersion, "version", false, "Print version information and exit")
 	pflag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "%s\n", toolID)
@@ -70,10 +71,13 @@ func parseCLIOptions() {
 		fmt.Fprintf(os.Stderr, "\n")
 		fmt.Fprintf(os.Stderr, "This tool queries the XMC API and prints the raw reply (JSON) to stdout.\n")
 		fmt.Fprintf(os.Stderr, "\n")
-		fmt.Fprintf(os.Stderr, "Usage: %s [options]\n", path.Base(os.Args[0]))
+		fmt.Fprintf(os.Stderr, "Usage: %s [options] query\n", path.Base(os.Args[0]))
 		fmt.Fprintf(os.Stderr, "\n")
 		fmt.Fprintf(os.Stderr, "Available options:\n")
 		pflag.PrintDefaults()
+		fmt.Fprintf(os.Stderr, "\n")
+		fmt.Fprintf(os.Stderr, "If not provided, query will default to:\n")
+		fmt.Fprintf(os.Stderr, "%s\n", defaultXMCQuery)
 		fmt.Fprintf(os.Stderr, "\n")
 		fmt.Fprintf(os.Stderr, "All options that take a value can be set via environment variables:\n")
 		fmt.Fprintf(os.Stderr, "  XMCHOST           -->  -host\n")
@@ -85,7 +89,6 @@ func parseCLIOptions() {
 		fmt.Fprintf(os.Stderr, "  XMCUSERID         -->  -userid\n")
 		fmt.Fprintf(os.Stderr, "  XMCSECRET         -->  -secret\n")
 		fmt.Fprintf(os.Stderr, "  XMCBASICAUTH      -->  -basicauth\n")
-		fmt.Fprintf(os.Stderr, "  XMCQUERY          -->  -query\n")
 		fmt.Fprintf(os.Stderr, "\n")
 		fmt.Fprintf(os.Stderr, "Environment variables can also be configured via a file called %s,\n", envFileName)
 		fmt.Fprintf(os.Stderr, "located in the current directory or in the home directory of the current\n")
@@ -93,6 +96,10 @@ func parseCLIOptions() {
 		os.Exit(errUsage)
 	}
 	pflag.Parse()
+	config.XMCQuery = strings.Join(pflag.CommandLine.Args(), " ")
+	if config.XMCQuery == "" {
+		config.XMCQuery = defaultXMCQuery
+	}
 }
 
 // init loads environment files if available.
