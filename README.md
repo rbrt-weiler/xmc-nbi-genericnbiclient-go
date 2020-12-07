@@ -19,7 +19,7 @@ This tool uses Go modules to handle dependencies.
 
 Use `go run ./...` to run the tool directly or `go build -o GenericNbiClient ./...` to compile a binary. Prebuilt binaries may be available as artifacts from the GitLab CI/CD [pipeline for tagged releases](https://gitlab.com/rbrt-weiler/xmc-nbi-genericnbiclient-go/pipelines?scope=tags).
 
-Tested with [go1.15](https://golang.org/doc/go1.13).
+Tested with [go1.15](https://golang.org/doc/go1.15).
 
 ## Usage
 
