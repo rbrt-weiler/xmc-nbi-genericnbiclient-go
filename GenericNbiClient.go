@@ -77,7 +77,7 @@ func parseCLIOptions() {
 		fmt.Fprintf(os.Stderr, "%s\n", toolID)
 		fmt.Fprintf(os.Stderr, "%s\n", toolURL)
 		fmt.Fprintf(os.Stderr, "\n")
-		fmt.Fprintf(os.Stderr, "This tool queries the XMC API and prints the raw reply (JSON) to stdout.\n")
+		fmt.Fprintf(os.Stderr, "%s\n", text.WrapSoft("This tool queries the Northbound Interface (NBI) of Extreme Management Center (XMC) and prints the raw reply (in JSON format) to stdout.", console.Cols))
 		fmt.Fprintf(os.Stderr, "\n")
 		fmt.Fprintf(os.Stderr, "Usage: %s [options] query\n", path.Base(os.Args[0]))
 		fmt.Fprintf(os.Stderr, "\n")
