@@ -14,9 +14,24 @@ import (
 	xmcnbiclient "gitlab.com/rbrt-weiler/go-module-xmcnbiclient"
 )
 
-type consoleInformation struct {
+type consoleHelper struct {
 	Rows int
 	Cols int
+}
+
+func (c *consoleHelper) UpdateDimensions() {
+	c.Cols, c.Rows = consolesize.GetConsoleSize()
+}
+
+func (c *consoleHelper) Sprintf(format string, a ...interface{}) string {
+	if c.Cols == 0 || c.Rows == 0 {
+		c.UpdateDimensions()
+	}
+	return text.WrapSoft(fmt.Sprintf(format, a...), c.Cols)
+}
+
+func (c *consoleHelper) Sprint(s string) string {
+	return c.Sprintf("%s", s)
 }
 
 // AppConfig stores the application configuration once parsed by flags.
@@ -56,7 +71,7 @@ const (
 
 // Variables used to pass data between functions.
 var (
-	console consoleInformation
+	console consoleHelper
 	config  appConfig
 )
 
@@ -77,7 +92,7 @@ func parseCLIOptions() {
 		fmt.Fprintf(os.Stderr, "%s\n", toolID)
 		fmt.Fprintf(os.Stderr, "%s\n", toolURL)
 		fmt.Fprintf(os.Stderr, "\n")
-		fmt.Fprintf(os.Stderr, "%s\n", text.WrapSoft("This tool queries the Northbound Interface (NBI) of Extreme Management Center (XMC) and prints the raw reply (in JSON format) to stdout.", console.Cols))
+		fmt.Fprintf(os.Stderr, "%s\n", console.Sprint("This tool queries the Northbound Interface (NBI) of Extreme Management Center (XMC) and prints the raw reply (in JSON format) to stdout."))
 		fmt.Fprintf(os.Stderr, "\n")
 		fmt.Fprintf(os.Stderr, "Usage: %s [options] query\n", path.Base(os.Args[0]))
 		fmt.Fprintf(os.Stderr, "\n")
@@ -98,7 +113,7 @@ func parseCLIOptions() {
 		fmt.Fprintf(os.Stderr, "  XMCSECRET         -->  -secret\n")
 		fmt.Fprintf(os.Stderr, "  XMCBASICAUTH      -->  -basicauth\n")
 		fmt.Fprintf(os.Stderr, "\n")
-		fmt.Fprintf(os.Stderr, "%s\n", text.WrapSoft(fmt.Sprintf("Environment variables can also be configured via a file called %s, located in the current directory or in the home directory of the current user.", envFileName), console.Cols))
+		fmt.Fprintf(os.Stderr, "%s\n", console.Sprintf("Environment variables can also be configured via a file called %s, located in the current directory or in the home directory of the current user.", envFileName))
 		os.Exit(errUsage)
 	}
 	pflag.Parse()
@@ -110,8 +125,8 @@ func parseCLIOptions() {
 
 // init loads environment files if available.
 func init() {
-	// get console size
-	console.Cols, console.Rows = consolesize.GetConsoleSize()
+	// initialize console size
+	console.UpdateDimensions()
 
 	// if envFileName exists in the current directory, load it
 	localEnvFile := fmt.Sprintf("./%s", envFileName)
