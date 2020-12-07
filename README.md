@@ -13,71 +13,53 @@ Other branches, for example for developing specific features, may be created and
 
 ## Dependencies
 
-GenericNbiClient uses the modules [godotenv](https://github.com/joho/godotenv), [envordef](https://gitlab.com/rbrt-weiler/go-module-envordef) and [xmcnbiclient](https://gitlab.com/rbrt-weiler/go-module-xmcnbiclient). Execute...
+This tool uses Go modules to handle dependencies.
 
-1. `go get -u github.com/joho/godotenv`
-1. `go get -u gitlab.com/rbrt-weiler/go-module-envordef`
-1. `go get -u gitlab.com/rbrt-weiler/go-module-xmcnbiclient`
+## Running / Compiling
 
-...before running or compiling GenericNbiClient. All other dependencies are included in a standard Go installation.
+Use `go run ./...` to run the tool directly or `go build -o GenericNbiClient ./...` to compile a binary. Prebuilt binaries may be available as artifacts from the GitLab CI/CD [pipeline for tagged releases](https://gitlab.com/rbrt-weiler/xmc-nbi-genericnbiclient-go/pipelines?scope=tags).
 
-## Compiling
-
-Use `go run GenericNbiClient.go` to run the tool directly or `go build GenericNbiClient.go` to compile a binary. Prebuilt binaries may be available as artifacts from the GitLab CI/CD [pipeline for tagged releases](https://gitlab.com/rbrt-weiler/xmc-nbi-genericnbiclient-go/pipelines?scope=tags).
-
-Tested with [go1.13](https://golang.org/doc/go1.13).
+Tested with [go1.15](https://golang.org/doc/go1.15).
 
 ## Usage
 
 `GenericNbiClient -h`:
 
-<pre>
+```text
 Available options:
-  -basicauth
-    	Use HTTP Basic Auth instead of OAuth
-  -host string
-    	XMC Hostname / IP
-  -insecurehttps
-    	Do not validate HTTPS certificates
-  -nohttps
-    	Use HTTP instead of HTTPS
-  -path string
-    	Path where XMC is reachable
-  -port uint
-    	HTTP port where XMC is listening (default 8443)
-  -query string
-    	GraphQL query to send to XMC (default "query { network { devices { up ip sysName nickName } } }")
-  -secret string
-    	Client Secret (OAuth) or password (Basic Auth) for authentication
-  -timeout uint
-    	Timeout for HTTP(S) connections (default 5)
-  -userid string
-    	Client ID (OAuth) or username (Basic Auth) for authentication
-  -version
-    	Print version information and exit
+  -h, --host string     XMC Hostname / IP
+      --port uint       HTTP port where XMC is listening (default 8443)
+      --path string     Path where XMC is reachable
+      --timeout uint    Timeout for HTTP(S) connections (default 5)
+      --nohttps         Use HTTP instead of HTTPS
+      --insecurehttps   Do not validate HTTPS certificates
+  -u, --userid string   Client ID (OAuth) or username (Basic Auth) for authentication
+  -s, --secret string   Client Secret (OAuth) or password (Basic Auth) for authentication
+      --basicauth       Use HTTP Basic Auth instead of OAuth
+      --version         Print version information and exit
+
+If not provided, query will default to:
+query { network { devices { up ip sysName nickName } } }
 
 All options that take a value can be set via environment variables:
-  XMCHOST           -->  -host
-  XMCPORT           -->  -port
-  XMCPATH           -->  -path
-  XMCTIMEOUT        -->  -timeout
-  XMCNOHTTPS        -->  -nohttps
-  XMCINSECUREHTTPS  -->  -insecurehttps
-  XMCUSERID         -->  -userid
-  XMCSECRET         -->  -secret
-  XMCBASICAUTH      -->  -basicauth
-  XMCQUERY          -->  -query
+  XMCHOST           -->  --host
+  XMCPORT           -->  --port
+  XMCPATH           -->  --path
+  XMCTIMEOUT        -->  --timeout
+  XMCNOHTTPS        -->  --nohttps
+  XMCINSECUREHTTPS  -->  --insecurehttps
+  XMCUSERID         -->  --userid
+  XMCSECRET         -->  --secret
+  XMCBASICAUTH      -->  --basicauth
 
-Environment variables can also be configured via a file called .xmcenv,
-located in the current directory or in the home directory of the current
-user.
-</pre>
+Environment variables can also be configured via a file called .xmcenv, located in the current directory or in the home directory of the current user.
+```
 
 ## Authentication
 
 GenericNbiClient supports two methods of authentication: OAuth2 and HTTP Basic Auth.
 
-* OAuth2: To use OAuth2, provide the parameters `userid` and `secret`. GenericNbiClient will attempt to obtain a OAuth2 token from XMC with the supplied credentials and, if successful, submit only that token with each API request as part of the HTTP header.
+* OAuth2: To use OAuth2, provide the parameters `userid` and `secret`. GenericNbiClient will attempt to obtain an OAuth2 token from XMC with the supplied credentials and, if successful, submit only that token with each API request as part of the HTTP header.
 * HTTP Basic Auth: To use HTTP Basic Auth, provide the parameters `userid` and `secret` as well as `basicauth`. GenericNbiClient will transmit the supplied credentials with each API request as part of the HTTP request header.
 
 As all interactions between GenericNbiClient and XMC are secured with HTTPS by default both methods should be safe for transmission over networks. It is strongly recommended to use OAuth2 though. Should the credentials ever be compromised, for example when using them on the CLI on a shared workstation, remediation will be much easier with OAuth2. When using unencrypted HTTP transfer (`nohttps`), Basic Auth should never be used.
