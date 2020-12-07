@@ -56,7 +56,7 @@ type appConfig struct {
 // Definitions used within the code.
 const (
 	toolName        string = "GenericNbiClient.go"
-	toolVersion     string = "0.13.0-dev"
+	toolVersion     string = "1.0.0"
 	toolID          string = toolName + "/" + toolVersion
 	toolURL         string = "https://gitlab.com/rbrt-weiler/xmc-nbi-genericnbiclient-go"
 	envFileName     string = ".xmcenv"
