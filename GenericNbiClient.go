@@ -159,7 +159,7 @@ func main() {
 	}
 	// Check that the option "host" has been set.
 	if config.XMCHost == "" {
-		fmt.Fprintln(os.Stderr, "Variable -host must be defined. Use -h to get help.")
+		fmt.Fprintln(os.Stderr, "Variable --host must be defined. Use --help to get help.")
 		os.Exit(errMissArg)
 	}
 
