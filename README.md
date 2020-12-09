@@ -23,7 +23,7 @@ Tested with [go1.15](https://golang.org/doc/go1.15).
 
 ## Usage
 
-`GenericNbiClient -h`:
+`GenericNbiClient --help`:
 
 ```text
 Available options:
