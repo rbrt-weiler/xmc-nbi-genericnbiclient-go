@@ -26,6 +26,8 @@ Tested with [go1.15](https://golang.org/doc/go1.15).
 `GenericNbiClient --help`:
 
 ```text
+Usage: ./GenericNbiClient [options] query
+
 Available options:
   -h, --host string     XMC Hostname / IP
       --port uint       HTTP port where XMC is listening (default 8443)
