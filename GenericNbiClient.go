@@ -111,7 +111,7 @@ func init() {
 	localEnvFile := fmt.Sprintf("./%s", envFileName)
 	if _, localEnvErr := os.Stat(localEnvFile); localEnvErr == nil {
 		if loadErr := godotenv.Load(localEnvFile); loadErr != nil {
-			fmt.Fprintf(os.Stderr, "Could not load env file <%s>: %s", localEnvFile, loadErr)
+			cons.Fprintf(os.Stderr, "Could not load env file <%s>: %s", localEnvFile, loadErr)
 		}
 	}
 
@@ -120,7 +120,7 @@ func init() {
 		homeEnvFile := fmt.Sprintf("%s/%s", homeDir, ".xmcenv")
 		if _, homeEnvErr := os.Stat(homeEnvFile); homeEnvErr == nil {
 			if loadErr := godotenv.Load(homeEnvFile); loadErr != nil {
-				fmt.Fprintf(os.Stderr, "Could not load env file <%s>: %s", homeEnvFile, loadErr)
+				cons.Fprintf(os.Stderr, "Could not load env file <%s>: %s", homeEnvFile, loadErr)
 			}
 		}
 	}
@@ -133,12 +133,12 @@ func main() {
 
 	// Print version information and exit.
 	if config.PrintVersion {
-		fmt.Println(toolID)
+		cons.Println(toolID)
 		os.Exit(errSuccess)
 	}
 	// Check that the option "host" has been set.
 	if config.XMCHost == "" {
-		fmt.Fprintln(os.Stderr, "Variable --host must be defined. Use --help to get help.")
+		cons.Fprintln(os.Stderr, "Variable --host must be defined. Use --help to get help.")
 		os.Exit(errMissArg)
 	}
 
@@ -146,7 +146,7 @@ func main() {
 	client := xmcnbiclient.New(config.XMCHost)
 	client.SetUserAgent(toolID)
 	if portErr := client.SetPort(config.XMCPort); portErr != nil {
-		fmt.Fprintf(os.Stderr, "XMC port could not be set: %s\n", portErr)
+		cons.Fprintf(os.Stderr, "XMC port could not be set: %s\n", portErr)
 		os.Exit(errHTTPPort)
 	}
 	if config.NoHTTPS {
@@ -156,7 +156,7 @@ func main() {
 		client.UseInsecureHTTPS()
 	}
 	if timeoutErr := client.SetTimeout(config.HTTPTimeout); timeoutErr != nil {
-		fmt.Fprintf(os.Stderr, "HTTP timeout could not be set: %s\n", timeoutErr)
+		cons.Fprintf(os.Stderr, "HTTP timeout could not be set: %s\n", timeoutErr)
 		os.Exit(errHTTPTimeout)
 	}
 	client.SetBasePath(config.XMCPath)
@@ -168,10 +168,10 @@ func main() {
 	// Call the API and print the result.
 	apiResult, apiError := client.QueryAPI(config.XMCQuery)
 	if apiError != nil {
-		fmt.Fprintf(os.Stderr, "Could not retrieve API result: %s\n", apiError)
+		cons.Fprintf(os.Stderr, "Could not retrieve API result: %s\n", apiError)
 		os.Exit(errAPIResult)
 	}
-	fmt.Println(string(apiResult))
+	cons.Println(string(apiResult))
 
 	// Exit with an appropriate exit code.
 	os.Exit(errSuccess)
